@@ -6,7 +6,7 @@ const propertyData = {
   explanation:
     "This property’s assessed value increased in line with recent neighborhood trends. The change may reflect surrounding market activity and comparable residential values.",
   lat: 39.9526,
-  lng: -75.1652
+  lng: -75.1652,
 };
 
 document.getElementById("searchBtn").addEventListener("click", () => {
@@ -27,7 +27,7 @@ document.getElementById("searchBtn").addEventListener("click", () => {
 const map = L.map("map").setView([propertyData.lat, propertyData.lng], 14);
 
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  attribution: "&copy; OpenStreetMap contributors"
+  attribution: "&copy; OpenStreetMap contributors",
 }).addTo(map);
 
 L.marker([propertyData.lat, propertyData.lng])

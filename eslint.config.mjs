@@ -55,6 +55,7 @@ export default defineConfig([
     languageOptions: {
       globals: {
         ...globals.browser,
+        "L": "readonly", // Leaflet global variable
       },
       ecmaVersion: "latest",
       sourceType: "module",
