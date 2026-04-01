@@ -44,7 +44,11 @@ def extract_opa_properties(request):
         storage_client = storage.Client()
         bucket = storage_client.bucket(raw_bucket)
         blob = bucket.blob(RAW_OBJECT_NAME)
-        blob.upload_from_filename(str(local_csv), content_type="text/csv")
+        blob.upload_from_filename(
+            str(local_csv),
+            content_type="text/csv",
+            timeout=600,
+        )
 
         return (
             json.dumps(
