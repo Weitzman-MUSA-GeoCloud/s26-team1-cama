@@ -1,0 +1,43 @@
+main:
+  steps:
+    - init:
+        assign:
+          - extract_url: "REPLACE_WITH_EXTRACT_URL"
+          - prepare_url: "REPLACE_WITH_PREPARE_URL"
+          - load_url: "REPLACE_WITH_LOAD_URL"
+
+    - extract:
+        call: http.post
+        args:
+          url: ${extract_url}
+          auth:
+            type: OIDC
+          timeout: 1800
+          body: {}
+        result: extract_result
+
+    - prepare:
+        call: http.post
+        args:
+          url: ${prepare_url}
+          auth:
+            type: OIDC
+          timeout: 1800
+          body: {}
+        result: prepare_result
+
+    - load:
+        call: http.post
+        args:
+          url: ${load_url}
+          auth:
+            type: OIDC
+          timeout: 1800
+          body: {}
+        result: load_result
+
+    - done:
+        return:
+          extract: ${extract_result.body}
+          prepare: ${prepare_result.body}
+          load: ${load_result.body}

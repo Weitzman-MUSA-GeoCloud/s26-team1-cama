@@ -65,6 +65,7 @@ def prepare_opa_properties(request):
         prepared_blob.upload_from_filename(
             str(local_jsonl),
             content_type="application/x-ndjson",
+            timeout=600,
         )
 
         return json_response(
