@@ -17,7 +17,6 @@ RAW_OBJECT_NAME = "opa_properties/opa_properties_public.csv"
 
 @functions_framework.http
 def extract_opa_properties(request):
-    del request
 
     raw_bucket = os.getenv("RAW_BUCKET")
     if not raw_bucket:

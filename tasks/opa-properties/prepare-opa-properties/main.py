@@ -15,25 +15,25 @@ RAW_OBJECT_NAME = "opa_properties/opa_properties_public.csv"
 PREPARED_OBJECT_NAME = "opa_properties/data.jsonl"
 
 
-def require_env(name: str) -> str:
-    value = os.getenv(name)
-    if not value:
-        raise RuntimeError(f"Missing required environment variable: {name}")
-    return value
-
-
-def json_response(payload: dict, status: int = 200):
-    return (
-        json.dumps(payload),
-        status,
-        {"Content-Type": "application/json"},
-    )
-
-
 @functions_framework.http
 def prepare_opa_properties(request):
-    raw_bucket = require_env("RAW_BUCKET")
-    prepared_bucket = require_env("PREPARED_BUCKET")
+    del request
+
+    raw_bucket = os.getenv("RAW_BUCKET")
+    if not raw_bucket:
+        return (
+            json.dumps({"ok": False, "error": "Missing RAW_BUCKET"}),
+            500,
+            {"Content-Type": "application/json"},
+        )
+
+    prepared_bucket = os.getenv("PREPARED_BUCKET")
+    if not prepared_bucket:
+        return (
+            json.dumps({"ok": False, "error": "Missing PREPARED_BUCKET"}),
+            500,
+            {"Content-Type": "application/json"},
+        )
 
     temp_dir = Path(tempfile.mkdtemp(dir="/tmp"))
     local_csv = temp_dir / "opa_properties_public.csv"
@@ -55,8 +55,7 @@ def prepare_opa_properties(request):
             for row in reader:
                 cleaned = {}
                 for key, value in row.items():
-                    new_key = (key or "").strip().lower()
-                    cleaned[new_key] = value
+                    cleaned[(key or "").strip().lower()] = value
 
                 f_out.write(json.dumps(cleaned, ensure_ascii=False) + "\n")
                 row_count += 1
@@ -68,22 +67,23 @@ def prepare_opa_properties(request):
             timeout=600,
         )
 
-        return json_response(
-            {
-                "ok": True,
-                "rows": row_count,
-                "prepared_uri": f"gs://{prepared_bucket}/{PREPARED_OBJECT_NAME}",
-            },
-            status=200,
+        return (
+            json.dumps(
+                {
+                    "ok": True,
+                    "rows": row_count,
+                    "prepared_uri": f"gs://{prepared_bucket}/{PREPARED_OBJECT_NAME}",
+                }
+            ),
+            200,
+            {"Content-Type": "application/json"},
         )
 
     except Exception as e:
-        return json_response(
-            {
-                "ok": False,
-                "error": str(e),
-            },
-            status=500,
+        return (
+            json.dumps({"ok": False, "error": str(e)}),
+            500,
+            {"Content-Type": "application/json"},
         )
 
     finally:
