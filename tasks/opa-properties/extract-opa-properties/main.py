@@ -1,6 +1,3 @@
-from dotenv import load_dotenv
-load_dotenv()
-
 import json
 import os
 import tempfile
@@ -8,7 +5,10 @@ from pathlib import Path
 
 import functions_framework
 import requests
+from dotenv import load_dotenv
 from google.cloud import storage
+
+load_dotenv()
 
 
 DEFAULT_SOURCE_URL = "https://opendata-downloads.s3.amazonaws.com/opa_properties_public.csv"
@@ -74,4 +74,3 @@ def extract_opa_properties(request):
             temp_dir.rmdir()
         except Exception:
             pass
-        

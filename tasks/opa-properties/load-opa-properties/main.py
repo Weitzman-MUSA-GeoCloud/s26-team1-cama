@@ -1,12 +1,12 @@
-from dotenv import load_dotenv
-load_dotenv()
-
 import json
 import os
 from pathlib import Path
 
 import functions_framework
+from dotenv import load_dotenv
 from google.cloud import bigquery
+
+load_dotenv()
 
 
 SQL_DIR = Path(__file__).resolve().parent / "sql"
@@ -16,7 +16,7 @@ def read_sql(filename, replacements):
     sql = (SQL_DIR / filename).read_text()
 
     for key, value in replacements.items():
-        sql = sql.replace(f"{{{{{key}}}}}", value)
+        sql = sql.replace(f"__{key}__", value)
 
     return sql
 

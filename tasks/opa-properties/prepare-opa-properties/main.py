@@ -1,6 +1,3 @@
-from dotenv import load_dotenv
-load_dotenv()
-
 import csv
 import json
 import os
@@ -8,7 +5,10 @@ import tempfile
 from pathlib import Path
 
 import functions_framework
+from dotenv import load_dotenv
 from google.cloud import storage
+
+load_dotenv()
 
 
 RAW_OBJECT_NAME = "opa_properties/opa_properties_public.csv"
