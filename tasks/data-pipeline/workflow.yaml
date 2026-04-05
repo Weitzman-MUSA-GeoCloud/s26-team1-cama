@@ -5,39 +5,97 @@ main:
           - extract_url: "REPLACE_WITH_EXTRACT_URL"
           - prepare_url: "REPLACE_WITH_PREPARE_URL"
           - load_url: "REPLACE_WITH_LOAD_URL"
+          - assessments_extract_url: "REPLACE_WITH_ASSESSMENTS_EXTRACT_URL"
+          - assessments_prepare_url: "REPLACE_WITH_ASSESSMENTS_PREPARE_URL"
+          - assessments_load_url: "REPLACE_WITH_ASSESSMENTS_LOAD_URL"
+          - extract_result: null
+          - prepare_result: null
+          - load_result: null
+          - assessments_extract_result: null
+          - assessments_prepare_result: null
+          - assessments_load_result: null
 
-    - extract:
-        call: http.post
-        args:
-          url: ${extract_url}
-          auth:
-            type: OIDC
-          timeout: 1800
-          body: {}
-        result: extract_result
+    - run_pipelines:
+        parallel:
+          shared:
+            - extract_result
+            - prepare_result
+            - load_result
+            - assessments_extract_result
+            - assessments_prepare_result
+            - assessments_load_result
+          branches:
+            - opa_properties:
+                steps:
+                  - extract:
+                      call: http.post
+                      args:
+                        url: ${extract_url}
+                        auth:
+                          type: OIDC
+                        timeout: 1800
+                        body: {}
+                      result: extract_result
 
-    - prepare:
-        call: http.post
-        args:
-          url: ${prepare_url}
-          auth:
-            type: OIDC
-          timeout: 1800
-          body: {}
-        result: prepare_result
+                  - prepare:
+                      call: http.post
+                      args:
+                        url: ${prepare_url}
+                        auth:
+                          type: OIDC
+                        timeout: 1800
+                        body: {}
+                      result: prepare_result
 
-    - load:
-        call: http.post
-        args:
-          url: ${load_url}
-          auth:
-            type: OIDC
-          timeout: 1800
-          body: {}
-        result: load_result
+                  - load:
+                      call: http.post
+                      args:
+                        url: ${load_url}
+                        auth:
+                          type: OIDC
+                        timeout: 1800
+                        body: {}
+                      result: load_result
+
+            - opa_assessments:
+                steps:
+                  - assessments_extract:
+                      call: http.post
+                      args:
+                        url: ${assessments_extract_url}
+                        auth:
+                          type: OIDC
+                        timeout: 1800
+                        body: {}
+                      result: assessments_extract_result
+
+                  - assessments_prepare:
+                      call: http.post
+                      args:
+                        url: ${assessments_prepare_url}
+                        auth:
+                          type: OIDC
+                        timeout: 1800
+                        body: {}
+                      result: assessments_prepare_result
+
+                  - assessments_load:
+                      call: http.post
+                      args:
+                        url: ${assessments_load_url}
+                        auth:
+                          type: OIDC
+                        timeout: 1800
+                        body: {}
+                      result: assessments_load_result
 
     - done:
         return:
-          extract: ${extract_result.body}
-          prepare: ${prepare_result.body}
-          load: ${load_result.body}
+          properties:
+            extract: ${extract_result.body}
+            prepare: ${prepare_result.body}
+            load: ${load_result.body}
+          assessments:
+            extract: ${assessments_extract_result.body}
+            prepare: ${assessments_prepare_result.body}
+            load: ${assessments_load_result.body}
