@@ -2,10 +2,14 @@ CREATE OR REPLACE TABLE `derived.current_assessment_bins` AS
 WITH binned AS (
     SELECT
         CAST(
-            FLOOR(market_value / 10000) * 10000 AS INT64
+            FLOOR(
+                market_value / 10000
+            ) * 10000 AS INT64
         ) AS lower_bound,
         CAST(
-            FLOOR(market_value / 10000) * 10000 + 10000 AS INT64
+            FLOOR(
+                market_value / 10000
+            ) * 10000 + 10000 AS INT64
         ) AS upper_bound
     FROM `derived.current_assessments`
     WHERE
