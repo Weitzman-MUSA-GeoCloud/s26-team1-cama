@@ -8,12 +8,18 @@ main:
           - assessments_extract_url: "REPLACE_WITH_ASSESSMENTS_EXTRACT_URL"
           - assessments_prepare_url: "REPLACE_WITH_ASSESSMENTS_PREPARE_URL"
           - assessments_load_url: "REPLACE_WITH_ASSESSMENTS_LOAD_URL"
+          - pwd_parcels_extract_url: "REPLACE_WITH_PWD_PARCELS_EXTRACT_URL"
+          - pwd_parcels_prepare_url: "REPLACE_WITH_PWD_PARCELS_PREPARE_URL"
+          - pwd_parcels_load_url: "REPLACE_WITH_PWD_PARCELS_LOAD_URL"
           - extract_result: null
           - prepare_result: null
           - load_result: null
           - assessments_extract_result: null
           - assessments_prepare_result: null
           - assessments_load_result: null
+          - pwd_parcels_extract_result: null
+          - pwd_parcels_prepare_result: null
+          - pwd_parcels_load_result: null
 
     - run_pipelines:
         parallel:
@@ -24,6 +30,9 @@ main:
             - assessments_extract_result
             - assessments_prepare_result
             - assessments_load_result
+            - pwd_parcels_extract_result
+            - pwd_parcels_prepare_result
+            - pwd_parcels_load_result
           branches:
             - opa_properties:
                 steps:
@@ -89,6 +98,38 @@ main:
                         body: {}
                       result: assessments_load_result
 
+            - pwd_parcels:
+                steps:
+                  - pwd_parcels_extract:
+                      call: http.post
+                      args:
+                        url: ${pwd_parcels_extract_url}
+                        auth:
+                          type: OIDC
+                        timeout: 1800
+                        body: {}
+                      result: pwd_parcels_extract_result
+
+                  - pwd_parcels_prepare:
+                      call: http.post
+                      args:
+                        url: ${pwd_parcels_prepare_url}
+                        auth:
+                          type: OIDC
+                        timeout: 1800
+                        body: {}
+                      result: pwd_parcels_prepare_result
+
+                  - pwd_parcels_load:
+                      call: http.post
+                      args:
+                        url: ${pwd_parcels_load_url}
+                        auth:
+                          type: OIDC
+                        timeout: 1800
+                        body: {}
+                      result: pwd_parcels_load_result
+
     - done:
         return:
           properties:
@@ -99,3 +140,7 @@ main:
             extract: ${assessments_extract_result.body}
             prepare: ${assessments_prepare_result.body}
             load: ${assessments_load_result.body}
+          pwd_parcels:
+            extract: ${pwd_parcels_extract_result.body}
+            prepare: ${pwd_parcels_prepare_result.body}
+            load: ${pwd_parcels_load_result.body}
