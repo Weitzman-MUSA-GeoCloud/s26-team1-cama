@@ -6,7 +6,8 @@ WITH cleaned AS (
         CAST(market_value AS NUMERIC) AS assessed_value,
         parcel_number
     FROM `musa5090s26-team1.source.opa_assessments`
-    WHERE market_value IS NOT NULL
+    WHERE
+        market_value IS NOT NULL
         AND year IS NOT NULL
 ),
 
@@ -17,7 +18,8 @@ binned AS (
         CAST(FLOOR(assessed_value / 10000) * 10000 AS INT64) AS lower_bound,
         CAST(FLOOR(assessed_value / 10000) * 10000 + 10000 AS INT64) AS upper_bound
     FROM cleaned
-    WHERE assessed_value >= 0
+    WHERE
+        assessed_value >= 0
         AND tax_year >= 2015
 )
 
