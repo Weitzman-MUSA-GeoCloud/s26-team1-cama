@@ -40,6 +40,7 @@ SELECT
 FROM `core.opa_properties` AS p
 JOIN latest_assessments AS la
     ON p.parcel_number = la.parcel_number
-WHERE la.rn = 1
+WHERE
+    la.rn = 1
     AND la.market_value IS NOT NULL
     AND la.market_value > 0;
