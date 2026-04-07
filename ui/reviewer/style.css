@@ -10,13 +10,13 @@ body {
 }
 
 .topbar {
-  background: #ffffff;
+  background: #fff;
   border-bottom: 1px solid #dcdfe4;
   padding: 20px 24px;
 }
 
 .topbar h1 {
-  margin: 0 0 8px 0;
+  margin: 0 0 8px;
   font-size: 2.2rem;
 }
 
@@ -37,7 +37,7 @@ body {
   gap: 14px;
   margin-bottom: 24px;
   padding: 10px 14px;
-  background: #ffffff;
+  background: #fff;
   border-radius: 14px;
   border: 1px solid #e5e7eb;
 }
@@ -64,15 +64,15 @@ body {
 }
 
 .card {
-  background: #ffffff;
+  background: #fff;
   border: 1px solid #e5e7eb;
   border-radius: 16px;
   padding: 22px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 4%);
 }
 
 .card h2 {
-  margin: 0 0 16px 0;
+  margin: 0 0 16px;
   font-size: 1.8rem;
 }
 
@@ -167,7 +167,7 @@ body {
   font-size: 0.9rem;
 }
 
-@media (max-width: 1024px) {
+@media (width <= 1024px) {
   .dashboard {
     grid-template-columns: 1fr;
   }
@@ -177,7 +177,7 @@ body {
   }
 }
 
-@media (max-width: 768px) {
+@media (width <= 768px) {
   .page {
     padding: 16px 16px 24px;
   }

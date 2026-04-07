@@ -10,13 +10,13 @@ body {
 }
 
 .topbar {
-  background: #ffffff;
+  background: #fff;
   border-bottom: 1px solid #dcdfe4;
   padding: 20px 24px;
 }
 
 .topbar h1 {
-  margin: 0 0 6px 0;
+  margin: 0 0 6px;
   font-size: 2.2rem;
 }
 
@@ -78,11 +78,11 @@ body {
   border: 1px solid #dcdfe4;
   border-radius: 16px;
   padding: 22px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 4%);
 }
 
 .card h2 {
-  margin: 0 0 18px 0;
+  margin: 0 0 18px;
   font-size: 1.8rem;
 }
 
@@ -173,7 +173,7 @@ body {
   font-size: 1rem;
 }
 
-@media (max-width: 960px) {
+@media (width <=  960px) {
   .main-grid,
   .bottom-grid {
     grid-template-columns: 1fr;
