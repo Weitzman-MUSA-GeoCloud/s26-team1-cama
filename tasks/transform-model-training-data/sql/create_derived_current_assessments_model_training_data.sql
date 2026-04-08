@@ -31,5 +31,5 @@ JOIN `core.opa_properties` AS p
 WHERE
     SAFE_CAST(p.sale_price AS FLOAT64) IS NOT NULL
     AND SAFE_CAST(p.sale_price AS FLOAT64) > 1000
-    AND SAFE_CAST(p.sale_price AS FLOAT64) < 5000000   
+    AND SAFE_CAST(p.sale_price AS FLOAT64) < 5000000
     AND ca.market_value IS NOT NULL;
