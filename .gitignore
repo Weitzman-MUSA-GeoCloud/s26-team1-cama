@@ -10,6 +10,7 @@ node_modules/
 
 # Data
 data/
+eda/*.csv
 
 # Sensitive files
 keys/
