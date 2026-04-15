@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CAMA Reviewer Dashboard</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>CAMA Reviewer Dashboard</h1>
+      <p>Philadelphia property assessment review interface</p>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="filters">
+      <select>
+        <option>All Neighborhoods</option>
+        <option>Center City</option>
+        <option>University City</option>
+        <option>West Philadelphia</option>
+      </select>
+
+      <select>
+        <option>Percent Change</option>
+        <option>Current Value</option>
+        <option>Previous Value</option>
+      </select>
+
+      <select>
+        <option>2025</option>
+        <option>2024</option>
+        <option>2023</option>
+      </select>
+    </section>
+
+    <section class="dashboard">
+      <div class="card map-card">
+        <div class="card-header">
+          <h2>Map View</h2>
+          <p>Assessment patterns across the city</p>
+        </div>
+        <div id="map"></div>
+      </div>
+
+      <div class="side-panel">
+        <div class="card">
+          <h2>Summary</h2>
+          <div class="summary-list">
+            <p><span>Total Properties</span><strong>582,314</strong></p>
+            <p><span>Median Change</span><strong class="positive">+6.8%</strong></p>
+            <p><span>High Change Areas</span><strong>18</strong></p>
+          </div>
+        </div>
+
+        <div class="card">
+         <h2>Distribution</h2>
+         <div class="empty-chart">
+         <p>No data available</p>
+        </div>
+    </div>
+
+        <div class="card">
+        <h2>Trend</h2>
+        <div class="empty-chart">
+        <p>No data available</p>
+        </div>
+    </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="./main.js"></script>
+</body>
+</html>

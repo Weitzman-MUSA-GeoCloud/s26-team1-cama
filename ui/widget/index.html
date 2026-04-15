@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Property Owner Widget</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>Property Value Viewer</h1>
+      <p>Check your property assessment, neighborhood context, and recent trends</p>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="search-row">
+      <input id="addressInput" type="text" placeholder="Enter address (e.g., 123 Market St)" />
+      <button id="searchBtn">Search</button>
+    </section>
+
+    <section class="main-grid">
+      <div class="card summary-card">
+        <h2>Property Summary</h2>
+        <div class="summary-list">
+          <p><span>Address</span><strong id="addressText">123 Market St</strong></p>
+          <p><span>Current Value</span><strong id="valueText">$320,000</strong></p>
+          <p><span>Change</span><strong id="changeText" class="positive">+14%</strong></p>
+          <p><span>Neighborhood</span><strong id="neighborhoodText">Center City</strong></p>
+        </div>
+      </div>
+
+      <div class="card map-card">
+        <div class="card-header">
+          <h2>Map</h2>
+          <p>Property location and neighborhood context</p>
+        </div>
+        <div id="map"></div>
+      </div>
+    </section>
+
+    <section class="bottom-grid">
+      <div class="card trend-card">
+        <h2>Value Trend</h2>
+        <div class="trend-placeholder">
+          <div class="bar" style="height: 45%"><span>2022</span></div>
+          <div class="bar" style="height: 58%"><span>2023</span></div>
+          <div class="bar" style="height: 70%"><span>2024</span></div>
+          <div class="bar" style="height: 82%"><span>2025</span></div>
+        </div>
+      </div>
+
+      <div class="card explanation-card">
+        <h2>Explanation</h2>
+        <p id="explanationText">
+          This property’s assessed value increased in line with recent neighborhood trends.
+          The change may reflect surrounding market activity and comparable residential values.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="./main.js"></script>
+</body>
+</html>
