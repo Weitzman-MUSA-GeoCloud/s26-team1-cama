@@ -3,67 +3,79 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Property Owner Widget</title>
-
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <title>CAMA Widget</title>
   <link rel="stylesheet" href="./style.css" />
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 </head>
 <body>
-  <header class="topbar">
-    <div>
-      <h1>Property Value Viewer</h1>
-      <p>Check your property assessment, neighborhood context, and recent trends</p>
-    </div>
-  </header>
+  <div class="page">
+    <header class="page-header">
+      <h1>Philadelphia CAMA Widget</h1>
+      <p>Search and review parcel-level assessment information.</p>
+    </header>
 
-  <main class="page">
-    <section class="search-row">
-      <input id="addressInput" type="text" placeholder="Enter address (e.g., 123 Market St)" />
-      <button id="searchBtn">Search</button>
+    <section class="search-section card">
+      <div class="search-row">
+        <input
+          id="address-input"
+          type="text"
+          placeholder="Enter property address"
+        />
+        <button id="search-btn">Search</button>
+      </div>
     </section>
 
-    <section class="main-grid">
-      <div class="card summary-card">
-        <h2>Property Summary</h2>
-        <div class="summary-list">
-          <p><span>Address</span><strong id="addressText">123 Market St</strong></p>
-          <p><span>Current Value</span><strong id="valueText">$320,000</strong></p>
-          <p><span>Change</span><strong id="changeText" class="positive">+14%</strong></p>
-          <p><span>Neighborhood</span><strong id="neighborhoodText">Center City</strong></p>
+    <section class="content-grid">
+      <div class="left-column">
+        <div class="card summary-card">
+          <h2>Property Summary</h2>
+          <div class="summary-item">
+            <span class="label">Address</span>
+            <span id="property-address" class="value">N/A</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Current Market Value</span>
+            <span id="market-value" class="value">N/A</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Assessment Change</span>
+            <span id="value-change" class="value">N/A</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Neighborhood</span>
+            <span id="neighborhood" class="value">N/A</span>
+          </div>
+        </div>
+
+        <div class="card trend-card">
+          <h2>Most Recent Assessment Distribution</h2>
+          <p class="chart-subtitle">
+            Distribution of assessed property values in the latest tax year
+          </p>
+          <div id="latest-assessment-chart"></div>
         </div>
       </div>
 
-      <div class="card map-card">
-        <div class="card-header">
+      <div class="right-column">
+        <div class="card map-card">
           <h2>Map</h2>
-          <p>Property location and neighborhood context</p>
-        </div>
-        <div id="map"></div>
-      </div>
-    </section>
-
-    <section class="bottom-grid">
-      <div class="card trend-card">
-        <h2>Value Trend</h2>
-        <div class="trend-placeholder">
-          <div class="bar" style="height: 45%"><span>2022</span></div>
-          <div class="bar" style="height: 58%"><span>2023</span></div>
-          <div class="bar" style="height: 70%"><span>2024</span></div>
-          <div class="bar" style="height: 82%"><span>2025</span></div>
+          <div id="map"></div>
         </div>
       </div>
-
-      <div class="card explanation-card">
-        <h2>Explanation</h2>
-        <p id="explanationText">
-          This property’s assessed value increased in line with recent neighborhood trends.
-          The change may reflect surrounding market activity and comparable residential values.
-        </p>
-      </div>
     </section>
-  </main>
+  </div>
 
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <script src="./main.js"></script>
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+  <script type="module" src="./main.js"></script>
 </body>
 </html>
