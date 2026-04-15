@@ -81,11 +81,13 @@ FROM ML.PREDICT(
 )
 """
 
+
 def run_query(client: bigquery.Client, sql: str, label: str) -> None:
     print(f"Starting: {label}")
     job = client.query(sql, location=LOCATION)
     job.result()
     print(f"Finished: {label}")
+
 
 def main():
     client = bigquery.Client(project=PROJECT_ID)
@@ -93,6 +95,7 @@ def main():
     run_query(client, BUILD_PREDICTION_INPUT_SQL, "build prediction input")
     run_query(client, PREDICT_SQL, "write current assessments")
     print("All steps completed successfully.")
+
 
 if __name__ == "__main__":
     main()
