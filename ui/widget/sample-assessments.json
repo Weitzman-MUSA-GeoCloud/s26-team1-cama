@@ -1,0 +1,17 @@
+[
+  {
+    "property_id": "502244720",
+    "address": "123 Market St",
+    "neighborhood": "Center City",
+    "history": [
+      { "year": "2015", "market_value": 169600 },
+      { "year": "2016", "market_value": 169600 },
+      { "year": "2017", "market_value": 169600 },
+      { "year": "2018", "market_value": 169600 },
+      { "year": "2019", "market_value": 167000 },
+      { "year": "2020", "market_value": 169200 },
+      { "year": "2021", "market_value": 169200 },
+      { "year": "2022", "market_value": 169200 }
+    ]
+  }
+]
