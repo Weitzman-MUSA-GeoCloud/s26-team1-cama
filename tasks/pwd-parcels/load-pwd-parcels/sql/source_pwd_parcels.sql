@@ -15,7 +15,8 @@ CREATE OR REPLACE EXTERNAL TABLE `__PROJECT_ID__.__BQ_SOURCE_DATASET__.pwd_parce
     pin STRING,
     parcel_id STRING,
     shape__area STRING,
-    shape__length STRING
+    shape__length STRING,
+    geometry_geojson STRING
 )
 OPTIONS (
     format = 'JSON',
