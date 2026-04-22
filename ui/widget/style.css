@@ -138,32 +138,26 @@ body {
   border: 1px solid #e5e7eb;
 }
 
-.trend-placeholder {
-  height: 280px;
+.trend-card {
   display: flex;
-  align-items: end;
-  gap: 18px;
-  padding: 16px;
-  border: 1px dashed #c4c9d1;
-  border-radius: 12px;
-  background: #fafafa;
+  flex-direction: column;
 }
 
-.bar {
-  flex: 1;
-  background: linear-gradient(180deg, #9ca3af, #4b5563);
-  border-radius: 10px 10px 0 0;
-  position: relative;
-  min-height: 40px;
+#latest-assessment-chart {
+  min-height: 340px;
+  padding: 8px 4px 0;
 }
 
-.bar span {
-  position: absolute;
-  bottom: -28px;
-  left: 50%;
-  transform: translateX(-50%);
-  color: #4b5563;
-  font-size: 0.9rem;
+.chart-error {
+  display: none;
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  border: 1px solid #f1c7c7;
+  border-radius: 10px;
+  background: #fef2f2;
+  color: #991b1b;
+  font-size: 0.95rem;
+  line-height: 1.5;
 }
 
 .explanation-card p {
@@ -173,7 +167,11 @@ body {
   font-size: 1rem;
 }
 
-@media (width <=  960px) {
+.trend-card .card-header p {
+  max-width: 40rem;
+}
+
+@media (width <= 960px) {
   .main-grid,
   .bottom-grid {
     grid-template-columns: 1fr;
@@ -185,5 +183,9 @@ body {
 
   #map {
     height: 320px;
+  }
+
+  #latest-assessment-chart {
+    min-height: 300px;
   }
 }

@@ -44,19 +44,20 @@
 
     <section class="bottom-grid">
       <div class="card trend-card">
-        <h2>Value Trend</h2>
-        <div class="trend-placeholder">
-          <div class="bar" style="height: 45%"><span>2022</span></div>
-          <div class="bar" style="height: 58%"><span>2023</span></div>
-          <div class="bar" style="height: 70%"><span>2024</span></div>
-          <div class="bar" style="height: 82%"><span>2025</span></div>
+        <div class="card-header">
+          <h2>Value Distribution</h2>
+          <p id="latest-assessment-chart-helper">
+            Distribution of assessed property values for the latest assessment year
+          </p>
         </div>
+        <div id="latest-assessment-chart-error" class="chart-error" role="status" aria-live="polite"></div>
+        <div id="latest-assessment-chart"></div>
       </div>
 
       <div class="card explanation-card">
         <h2>Explanation</h2>
         <p id="explanationText">
-          This property’s assessed value increased in line with recent neighborhood trends.
+          This property's assessed value increased in line with recent neighborhood trends.
           The change may reflect surrounding market activity and comparable residential values.
         </p>
       </div>
@@ -64,6 +65,7 @@
   </main>
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
   <script src="./main.js"></script>
 </body>
 </html>
