@@ -1,4 +1,3 @@
-import csv
 import json
 import os
 import tempfile
@@ -11,7 +10,7 @@ from google.cloud import storage
 load_dotenv()
 
 
-RAW_OBJECT_NAME = "pwd_parcels/pwd_parcels.csv"
+RAW_OBJECT_NAME = "pwd_parcels/pwd_parcels.geojson"
 PREPARED_OBJECT_NAME = "pwd_parcels/data.jsonl"
 
 
@@ -36,26 +35,38 @@ def prepare_pwd_parcels(request):
         )
 
     temp_dir = Path(tempfile.mkdtemp(dir="/tmp"))
-    local_csv = temp_dir / "pwd_parcels.csv"
+    local_geojson = temp_dir / "pwd_parcels.geojson"
     local_jsonl = temp_dir / "data.jsonl"
 
     try:
         storage_client = storage.Client()
 
         raw_blob = storage_client.bucket(raw_bucket).blob(RAW_OBJECT_NAME)
-        raw_blob.download_to_filename(str(local_csv))
+        raw_blob.download_to_filename(str(local_geojson))
 
         row_count = 0
 
-        with local_csv.open("r", encoding="utf-8-sig", newline="") as f_in, \
+        with local_geojson.open("r", encoding="utf-8-sig") as f_in, \
              local_jsonl.open("w", encoding="utf-8") as f_out:
 
-            reader = csv.DictReader(f_in)
+            data = json.load(f_in)
 
-            for row in reader:
+            for feature in data.get("features", []):
                 cleaned = {}
-                for key, value in row.items():
-                    cleaned[(key or "").strip().lower()] = value
+                for key, value in feature.get("properties", {}).items():
+                    if value is None:
+                        cleaned[(key or "").strip().lower()] = None
+                    else:
+                        cleaned[(key or "").strip().lower()] = str(value)
+
+                geometry = feature.get("geometry")
+                if geometry is None:
+                    cleaned["geometry_geojson"] = None
+                else:
+                    cleaned["geometry_geojson"] = json.dumps(
+                        geometry,
+                        ensure_ascii=False,
+                    )
 
                 f_out.write(json.dumps(cleaned, ensure_ascii=False) + "\n")
                 row_count += 1
@@ -88,8 +99,8 @@ def prepare_pwd_parcels(request):
 
     finally:
         try:
-            if local_csv.exists():
-                local_csv.unlink()
+            if local_geojson.exists():
+                local_geojson.unlink()
             if local_jsonl.exists():
                 local_jsonl.unlink()
             temp_dir.rmdir()
