@@ -2,41 +2,34 @@ import json
 import os
 from pathlib import Path
 
+import functions_framework
 from dotenv import load_dotenv
 from google.cloud import bigquery
 
 load_dotenv()
 
+SQL_DIR = Path(__file__).resolve().parent / "sql"
 
+
+@functions_framework.http
 def main(request):
+    del request
+
     project_id = os.getenv("PROJECT_ID")
-    derived_dataset = os.getenv("DERIVED_DATASET", "derived")
+    derived_dataset = os.getenv("BQ_DERIVED_DATASET", "derived")
 
     if not project_id:
         return (
-            json.dumps(
-                {
-                    "status": "error",
-                    "message": "Missing required environment variable: PROJECT_ID",
-                }
-            ),
-            400,
+            json.dumps({"ok": False, "error": "Missing PROJECT_ID"}),
+            500,
             {"Content-Type": "application/json"},
         )
 
-    sql_path = (
-        Path(__file__).resolve().parent
-        / "create_derived_current_assessment_bins.sql"
-    )
+    sql_path = SQL_DIR / "create_derived_current_assessment_bins.sql"
 
     if not sql_path.exists():
         return (
-            json.dumps(
-                {
-                    "status": "error",
-                    "message": f"SQL file not found: {sql_path.name}",
-                }
-            ),
+            json.dumps({"ok": False, "error": f"SQL file not found: {sql_path.name}"}),
             500,
             {"Content-Type": "application/json"},
         )
@@ -64,7 +57,7 @@ def main(request):
     return (
         json.dumps(
             {
-                "status": "ok",
+                "ok": True,
                 "table": output_table,
                 "total_properties": total_properties,
             }
