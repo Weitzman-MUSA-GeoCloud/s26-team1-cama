@@ -76,7 +76,16 @@ def export_property_tile_info(request):
         ON parcels.property_id = current_predictions.property_id
     LEFT JOIN latest_assessments
         ON parcels.property_id = latest_assessments.property_id
-    WHERE parcels.geog IS NOT NULL
+    WHERE
+        parcels.geog IS NOT NULL
+        AND parcels.property_id IS NOT NULL
+        AND properties.category_code_description IN (
+            'SINGLE FAMILY',
+            'MULTI FAMILY',
+            'APARTMENTS > 4 UNITS',
+            'VACANT LAND - RESIDENTIAL',
+            'GARAGE - RESIDENTIAL'
+        )
     ORDER BY parcels.property_id
     """
 
