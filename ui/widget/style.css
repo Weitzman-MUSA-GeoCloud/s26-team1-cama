@@ -143,10 +143,6 @@ body {
   flex-direction: column;
 }
 
-.trend-card .card-header p {
-  max-width: 40rem;
-}
-
 #latest-assessment-chart {
   min-height: 340px;
   padding: 8px 4px 0;
@@ -169,6 +165,10 @@ body {
   line-height: 1.7;
   color: #374151;
   font-size: 1rem;
+}
+
+.trend-card .card-header p {
+  max-width: 40rem;
 }
 
 @media (width <= 960px) {

@@ -63,48 +63,48 @@ function buildDisplayBins(rows) {
 
   while (lowerBound < MAIN_DISPLAY_MAX) {
     bins.push({
-      lower_bound: lowerBound,
-      upper_bound: lowerBound + MAIN_DISPLAY_BIN_SIZE,
-      property_count: 0,
+      lowerBound,
+      upperBound: lowerBound + MAIN_DISPLAY_BIN_SIZE,
+      propertyCount: 0,
       label: "",
-      tooltip_label: "",
-      is_overflow: false,
+      tooltipLabel: "",
+      isOverflow: false,
     });
     lowerBound += MAIN_DISPLAY_BIN_SIZE;
   }
 
   bins.push({
-    lower_bound: MAIN_DISPLAY_MAX,
-    upper_bound: null,
-    property_count: 0,
+    lowerBound: MAIN_DISPLAY_MAX,
+    upperBound: null,
+    propertyCount: 0,
     label: OVERFLOW_LABEL,
-    tooltip_label: `>${formatCurrency(MAIN_DISPLAY_MAX)}`,
-    is_overflow: true,
+    tooltipLabel: `>${formatCurrency(MAIN_DISPLAY_MAX)}`,
+    isOverflow: true,
   });
 
   for (const row of rows) {
-    if (row.lower_bound >= MAIN_DISPLAY_MAX || row.upper_bound > MAIN_DISPLAY_MAX) {
-      bins[bins.length - 1].property_count += row.property_count;
+    if (row.lowerBound >= MAIN_DISPLAY_MAX || row.upperBound > MAIN_DISPLAY_MAX) {
+      bins[bins.length - 1].propertyCount += row.propertyCount;
       continue;
     }
 
-    const index = Math.floor(row.lower_bound / MAIN_DISPLAY_BIN_SIZE);
+    const index = Math.floor(row.lowerBound / MAIN_DISPLAY_BIN_SIZE);
     if (bins[index]) {
-      bins[index].property_count += row.property_count;
+      bins[index].propertyCount += row.propertyCount;
     }
   }
 
   for (const bin of bins) {
-    if (bin.is_overflow) {
+    if (bin.isOverflow) {
       continue;
     }
 
-    bin.tooltip_label = `${formatCurrency(bin.lower_bound)} ${RANGE_SEPARATOR} ${formatCurrency(bin.upper_bound - 1)}`;
+    bin.tooltipLabel = `${formatCurrency(bin.lowerBound)} ${RANGE_SEPARATOR} ${formatCurrency(bin.upperBound - 1)}`;
 
-    if (bin.lower_bound === 0) {
+    if (bin.lowerBound === 0) {
       bin.label = "$0";
-    } else if (bin.lower_bound % 500000 === 0) {
-      bin.label = formatCompactCurrency(bin.lower_bound);
+    } else if (bin.lowerBound % 500000 === 0) {
+      bin.label = formatCompactCurrency(bin.lowerBound);
     } else {
       bin.label = "";
     }
@@ -118,7 +118,7 @@ function renderLatestAssessmentChart(rows, latestTaxYear) {
   const categories = rows.map((row) => row.label);
   const seriesData = rows.map((row) => ({
     x: row.label,
-    y: row.property_count,
+    y: row.propertyCount,
   }));
 
   destroyLatestAssessmentChart();
@@ -190,7 +190,7 @@ function renderLatestAssessmentChart(rows, latestTaxYear) {
     },
     tooltip: {
       x: {
-        formatter: (_value, { dataPointIndex }) => rows[dataPointIndex].tooltip_label,
+        formatter: (_value, { dataPointIndex }) => rows[dataPointIndex].tooltipLabel,
       },
       y: {
         formatter: (value) => `${formatNumber(value)} properties`,
@@ -225,7 +225,7 @@ async function loadLatestAssessmentChart() {
     }
 
     const taxYears = payload
-      .map((row) => Number(row.tax_year))
+      .map((row) => Number(row["tax_year"]))
       .filter((taxYear) => Number.isFinite(taxYear));
 
     if (taxYears.length === 0) {
@@ -236,19 +236,19 @@ async function loadLatestAssessmentChart() {
 
     const latestTaxYear = Math.max(...taxYears);
     const latestRows = payload
-      .filter((row) => Number(row.tax_year) === latestTaxYear)
+      .filter((row) => Number(row["tax_year"]) === latestTaxYear)
       .map((row) => ({
-        lower_bound: Number(row.lower_bound),
-        upper_bound: Number(row.upper_bound),
-        property_count: Number(row.property_count),
+        lowerBound: Number(row["lower_bound"]),
+        upperBound: Number(row["upper_bound"]),
+        propertyCount: Number(row["property_count"]),
       }))
       .filter(
         (row) =>
-          Number.isFinite(row.lower_bound) &&
-          Number.isFinite(row.upper_bound) &&
-          Number.isFinite(row.property_count),
+          Number.isFinite(row.lowerBound) &&
+          Number.isFinite(row.upperBound) &&
+          Number.isFinite(row.propertyCount),
       )
-      .sort((left, right) => left.lower_bound - right.lower_bound);
+      .sort((left, right) => left.lowerBound - right.lowerBound);
 
     if (latestRows.length === 0) {
       destroyLatestAssessmentChart();
