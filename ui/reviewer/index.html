@@ -26,6 +26,7 @@
       </select>
 
       <select>
+        <option>Predicted Value</option>
         <option>Percent Change</option>
         <option>Current Value</option>
         <option>Previous Value</option>
@@ -38,38 +39,49 @@
       </select>
     </section>
 
-    <section class="dashboard">
+    <section class="dashboard-top">
       <div class="card map-card">
         <div class="card-header">
           <h2>Map View</h2>
-          <p>Assessment patterns across the city</p>
+          <p>Citywide spatial context for property assessment review</p>
         </div>
         <div id="map"></div>
       </div>
 
-      <div class="side-panel">
-        <div class="card">
-          <h2>Summary</h2>
-          <div class="summary-list">
-            <p><span>Total Properties</span><strong>582,314</strong></p>
-            <p><span>Median Change</span><strong class="positive">+6.8%</strong></p>
-            <p><span>High Change Areas</span><strong>18</strong></p>
-          </div>
+      <div class="card summary-card">
+        <h2>Summary</h2>
+        <div class="summary-list">
+          <p><span>Total Properties</span><strong>582,314</strong></p>
+          <p><span>Median Predicted Value</span><strong>$87,500</strong></p>
+          <p><span>Most Common Range</span><strong>$20k–$30k</strong></p>
+          <p><span>Peak Bin Count</span><strong>38,318</strong></p>
         </div>
+      </div>
+    </section>
 
-        <div class="card">
-         <h2>Distribution</h2>
-         <div class="empty-chart">
-         <p>No data available</p>
+    <section class="dashboard-bottom">
+      <div class="card distribution-card">
+        <h2>Distribution of Predicted Property Values</h2>
+        <p class="card-subtitle">Count of properties by predicted value range</p>
+
+        <div class="chart-shell">
+          <div class="chart-yaxis" id="distributionYAxis"></div>
+          <div id="distributionChart" class="chart-area"></div>
+</div>
+
+        <p class="chart-note">
+          All value bins are included; x-axis labels are sampled for readability.
+        </p>
+      </div>
+
+      <div class="card trend-card">
+        <div class="card-header">
+          <h2>Trend / Notes</h2>
+          <p>Reserved for additional comparisons, notes, or future metrics</p>
         </div>
-    </div>
-
-        <div class="card">
-        <h2>Trend</h2>
         <div class="empty-chart">
-        <p>No data available</p>
+          <p>No additional trend data available yet</p>
         </div>
-    </div>
       </div>
     </section>
   </main>
