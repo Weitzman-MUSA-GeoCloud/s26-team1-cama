@@ -1,71 +1,121 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Property Owner Widget</title>
-
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <link rel="stylesheet" href="./style.css" />
-</head>
-<body>
-  <header class="topbar">
-    <div>
-      <h1>Property Value Viewer</h1>
-      <p>Check your property assessment, neighborhood context, and recent trends</p>
-    </div>
-  </header>
-
-  <main class="page">
-    <section class="search-row">
-      <input id="addressInput" type="text" placeholder="Enter address (e.g., 123 Market St)" />
-      <button id="searchBtn">Search</button>
-    </section>
-
-    <section class="main-grid">
-      <div class="card summary-card">
-        <h2>Property Summary</h2>
-        <div class="summary-list">
-          <p><span>Address</span><strong id="addressText">123 Market St</strong></p>
-          <p><span>Current Value</span><strong id="valueText">$320,000</strong></p>
-          <p><span>Change</span><strong id="changeText" class="positive">+14%</strong></p>
-          <p><span>Neighborhood</span><strong id="neighborhoodText">Center City</strong></p>
-        </div>
-      </div>
-
-      <div class="card map-card">
-        <div class="card-header">
-          <h2>Map</h2>
-          <p>Property location and neighborhood context</p>
-        </div>
-        <div id="map"></div>
-      </div>
-    </section>
-
-    <section class="bottom-grid">
-      <div class="card trend-card">
-        <div class="card-header">
-          <h2>Value Distribution</h2>
-          <p id="latest-assessment-chart-helper">
-            Distribution of assessed property values for the latest assessment year
-          </p>
-        </div>
-        <div id="latest-assessment-chart-error" class="chart-error" role="status" aria-live="polite"></div>
-        <div id="latest-assessment-chart"></div>
-      </div>
-
-      <div class="card explanation-card">
-        <h2>Explanation</h2>
-        <p id="explanationText">
-          This property's assessed value increased in line with recent neighborhood trends.
-          The change may reflect surrounding market activity and comparable residential values.
-        </p>
-      </div>
-    </section>
-  </main>
-
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Historical Assessment Value Widget</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
   <script src="./main.js"></script>
-</body>
+  <body>
+    <main class="widget-page">
+      <header class="widget-header">
+        <p class="eyebrow">Property assessments</p>
+        <h1>Historical Assessment Value</h1>
+        <p class="intro">
+          View historical assessment values for a selected property using its
+          OPA ID.
+        </p>
+      </header>
+
+      <section class="lookup-panel" aria-label="Property lookup">
+        <label for="opaIdInput" class="input-label">OPA ID</label>
+        <div class="lookup-row">
+          <input
+            id="opaIdInput"
+            type="text"
+            inputmode="numeric"
+            placeholder="Enter OPA ID (e.g., 123456700)"
+            aria-describedby="opaIdHelp"
+          />
+          <button id="searchBtn" type="button">Look up property</button>
+        </div>
+        <p id="opaIdHelp" class="helper-text">
+          Enter a 9–10 digit OPA identifier to load property assessment history.
+        </p>
+      </section>
+
+      <section class="content-grid">
+        <article class="card summary-card" aria-labelledby="summary-heading">
+          <h2 id="summary-heading">Property summary</h2>
+          <dl class="summary-list">
+            <div class="summary-row">
+              <dt>OPA ID</dt>
+              <dd id="opaIdText">123456700</dd>
+            </div>
+            <div class="summary-row">
+              <dt>Address</dt>
+              <dd id="addressText">123 Market St</dd>
+            </div>
+            <div class="summary-row">
+              <dt>Current assessment</dt>
+              <dd id="currentValueText">$320,000</dd>
+            </div>
+            <div class="summary-row">
+              <dt>Tax year</dt>
+              <dd id="taxYearText">2025</dd>
+            </div>
+            <div class="summary-row">
+              <dt>Neighborhood</dt>
+              <dd id="neighborhoodText">Center City</dd>
+            </div>
+          </dl>
+        </article>
+
+        <article class="card map-card" aria-labelledby="map-heading">
+          <div class="card-header">
+            <h2 id="map-heading">Map</h2>
+            <p>Property location and surrounding context</p>
+          </div>
+          <div id="map"></div>
+        </article>
+      </section>
+
+      <section class="bottom-grid">
+        <article class="card trend-card" aria-labelledby="trend-heading">
+          <div class="card-header">
+            <h2 id="trend-heading">Assessment history</h2>
+            <p>Historical assessed values by tax year</p>
+          </div>
+          <div class="trend-placeholder" aria-hidden="true">
+            <div class="bar-group">
+              <div class="bar" style="height: 38%"></div>
+              <span>2021</span>
+            </div>
+            <div class="bar-group">
+              <div class="bar" style="height: 48%"></div>
+              <span>2022</span>
+            </div>
+            <div class="bar-group">
+              <div class="bar" style="height: 58%"></div>
+              <span>2023</span>
+            </div>
+            <div class="bar-group">
+              <div class="bar" style="height: 70%"></div>
+              <span>2024</span>
+            </div>
+            <div class="bar-group">
+              <div class="bar" style="height: 82%"></div>
+              <span>2025</span>
+            </div>
+          </div>
+        </article>
+
+        <article class="card notes-card" aria-labelledby="notes-heading">
+          <div class="card-header">
+            <h2 id="notes-heading">Notes</h2>
+            <p>Placeholder space for assessment context or methodology</p>
+          </div>
+          <p class="notes-text">
+            This area can be used later for explanatory text, metadata, or
+            links to assessment records.
+          </p>
+        </article>
+      </section>
+    </main>
+
+    <script src="./main.js"></script>
+  </body>
 </html>
