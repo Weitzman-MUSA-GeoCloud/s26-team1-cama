@@ -1,25 +1,25 @@
 const data = [
   {
-    property_id: "502244720",
+    propertyId: "502244720",
     address: "Sample property record",
     neighborhood: "Philadelphia",
     lat: 39.9526,
     lng: -75.1652,
     history: [
-      { year: "2015", market_value: 169600 },
-      { year: "2016", market_value: 169600 },
-      { year: "2017", market_value: 169600 },
-      { year: "2018", market_value: 169600 },
-      { year: "2019", market_value: 167000 },
-      { year: "2020", market_value: 169200 },
-      { year: "2021", market_value: 169200 },
-      { year: "2022", market_value: 169200 },
-      { year: "2023", market_value: 185000 },
-      { year: "2024", market_value: 185000 },
-      { year: "2025", market_value: 306700 },
-      { year: "2026", market_value: 306700 }
-    ]
-  }
+      { year: "2015", marketValue: 169600 },
+      { year: "2016", marketValue: 169600 },
+      { year: "2017", marketValue: 169600 },
+      { year: "2018", marketValue: 169600 },
+      { year: "2019", marketValue: 167000 },
+      { year: "2020", marketValue: 169200 },
+      { year: "2021", marketValue: 169200 },
+      { year: "2022", marketValue: 169200 },
+      { year: "2023", marketValue: 185000 },
+      { year: "2024", marketValue: 185000 },
+      { year: "2025", marketValue: 306700 },
+      { year: "2026", marketValue: 306700 },
+    ],
+  },
 ];
 
 let map = null;
@@ -28,7 +28,7 @@ let marker = null;
 const DEFAULT_VIEW = {
   lat: 39.9526,
   lng: -75.1652,
-  zoom: 12
+  zoom: 12,
 };
 
 function formatMoney(value) {
@@ -38,11 +38,11 @@ function formatMoney(value) {
 function initializeMap() {
   map = L.map("map").setView(
     [DEFAULT_VIEW.lat, DEFAULT_VIEW.lng],
-    DEFAULT_VIEW.zoom
+    DEFAULT_VIEW.zoom,
   );
 
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: "&copy; OpenStreetMap contributors"
+    attribution: "&copy; OpenStreetMap contributors",
   }).addTo(map);
 }
 
@@ -57,7 +57,7 @@ function updateMap(property) {
 
   marker = L.marker([property.lat, property.lng])
     .addTo(map)
-    .bindPopup(`${property.address}<br>OPA ID: ${property.property_id}`)
+    .bindPopup(`${property.address}<br>OPA ID: ${property.propertyId}`)
     .openPopup();
 }
 
@@ -94,7 +94,7 @@ function renderTrend(property) {
   trendContainer.innerHTML = "";
 
   const maxValue = Math.max(
-    ...property.history.map((item) => Number(item.market_value))
+    ...property.history.map((item) => Number(item.marketValue)),
   );
 
   property.history.forEach((item) => {
@@ -103,7 +103,7 @@ function renderTrend(property) {
 
     const bar = document.createElement("div");
     bar.className = "bar";
-    bar.style.height = `${(Number(item.market_value) / maxValue) * 100}%`;
+    bar.style.height = `${(Number(item.marketValue) / maxValue) * 100}%`;
 
     const label = document.createElement("span");
     label.textContent = item.year;
@@ -115,14 +115,14 @@ function renderTrend(property) {
 }
 
 function renderSummary(property) {
-  document.getElementById("opaIdText").textContent = property.property_id;
+  document.getElementById("opaIdText").textContent = property.propertyId;
   document.getElementById("addressText").textContent = property.address || "N/A";
   document.getElementById("neighborhoodText").textContent =
     property.neighborhood || "N/A";
 
   const latest = property.history[property.history.length - 1];
   document.getElementById("currentValueText").textContent = formatMoney(
-    latest.market_value
+    latest.marketValue,
   );
   document.getElementById("taxYearText").textContent = latest.year;
 }
@@ -139,7 +139,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("searchBtn").addEventListener("click", () => {
     const opaId = document.getElementById("opaIdInput").value.trim();
-    const match = data.find((item) => item.property_id === opaId);
+    const match = data.find((item) => item.propertyId === opaId);
 
     if (match) {
       renderProperty(match);
