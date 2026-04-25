@@ -188,9 +188,6 @@ neighborhoodPoints.forEach((point) => {
     );
 });
 
-function formatBinLabel(lower, upper) {
-  return `$${Math.round(lower / 1000)}k–$${Math.round(upper / 1000)}k`;
-}
 
 function formatBinLabel(lower, upper) {
   return `$${Math.round(lower / 1000)}k–$${Math.round(upper / 1000)}k`;
