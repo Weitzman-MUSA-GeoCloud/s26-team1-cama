@@ -2,105 +2,122 @@ main:
   steps:
     - init:
         assign:
-          - extract_url: "REPLACE_WITH_EXTRACT_URL"
-          - prepare_url: "REPLACE_WITH_PREPARE_URL"
-          - load_url: "REPLACE_WITH_LOAD_URL"
-          - assessments_extract_url: "REPLACE_WITH_ASSESSMENTS_EXTRACT_URL"
-          - assessments_prepare_url: "REPLACE_WITH_ASSESSMENTS_PREPARE_URL"
-          - assessments_load_url: "REPLACE_WITH_ASSESSMENTS_LOAD_URL"
-          - pwd_parcels_extract_url: "REPLACE_WITH_PWD_PARCELS_EXTRACT_URL"
-          - pwd_parcels_prepare_url: "REPLACE_WITH_PWD_PARCELS_PREPARE_URL"
-          - pwd_parcels_load_url: "REPLACE_WITH_PWD_PARCELS_LOAD_URL"
-          - extract_result: null
-          - prepare_result: null
-          - load_result: null
-          - assessments_extract_result: null
-          - assessments_prepare_result: null
-          - assessments_load_result: null
+          - project_id: "musa5090s26-team1"
+          - region: "us-east4"
+          - function_base_url: "https://us-east4-musa5090s26-team1.cloudfunctions.net"
+          - opa_properties_extract_url: ${function_base_url + "/extract-opa-properties"}
+          - opa_properties_prepare_url: ${function_base_url + "/prepare-opa-properties"}
+          - opa_properties_load_url: ${function_base_url + "/load-opa-properties"}
+          - opa_assessments_extract_url: ${function_base_url + "/extract-opa-assessments"}
+          - opa_assessments_prepare_url: ${function_base_url + "/prepare-opa-assessments"}
+          - opa_assessments_load_url: ${function_base_url + "/load-opa-assessments"}
+          - pwd_parcels_extract_url: ${function_base_url + "/extract-pwd-parcels"}
+          - pwd_parcels_prepare_url: ${function_base_url + "/prepare-pwd-parcels"}
+          - pwd_parcels_load_url: ${function_base_url + "/load-pwd-parcels"}
+          - transform_model_training_data_url: ${function_base_url + "/transform-model-training-data"}
+          - transform_tax_year_assessment_bins_url: ${function_base_url + "/transform-tax-year-assessment-bins"}
+          - transform_current_assessment_bins_url: ${function_base_url + "/transform-current-assessment-bins"}
+          - export_tax_year_assessment_bins_url: ${function_base_url + "/export-tax-year-assessment-bins"}
+          - export_current_assessment_bins_url: ${function_base_url + "/export-current-assessment-bins"}
+          - export_property_tile_info_url: ${function_base_url + "/export-property-tile-info"}
+          - opa_properties_extract_result: null
+          - opa_properties_prepare_result: null
+          - opa_properties_load_result: null
+          - opa_assessments_extract_result: null
+          - opa_assessments_prepare_result: null
+          - opa_assessments_load_result: null
           - pwd_parcels_extract_result: null
           - pwd_parcels_prepare_result: null
           - pwd_parcels_load_result: null
+          - transform_model_training_data_result: null
+          - predict_current_assessments_result: null
+          - transform_tax_year_assessment_bins_result: null
+          - transform_current_assessment_bins_result: null
+          - export_tax_year_assessment_bins_result: null
+          - export_current_assessment_bins_result: null
+          - export_property_tile_info_result: null
+          - generate_property_map_tiles_result: null
 
-    - run_pipelines:
+    - run_ingest_pipelines:
         parallel:
           shared:
-            - extract_result
-            - prepare_result
-            - load_result
-            - assessments_extract_result
-            - assessments_prepare_result
-            - assessments_load_result
+            - opa_properties_extract_result
+            - opa_properties_prepare_result
+            - opa_properties_load_result
+            - opa_assessments_extract_result
+            - opa_assessments_prepare_result
+            - opa_assessments_load_result
             - pwd_parcels_extract_result
             - pwd_parcels_prepare_result
             - pwd_parcels_load_result
           branches:
             - opa_properties:
                 steps:
-                  - extract:
+                  - extract_opa_properties:
                       call: http.post
                       args:
-                        url: ${extract_url}
+                        url: ${opa_properties_extract_url}
                         auth:
                           type: OIDC
                         timeout: 1800
                         body: {}
-                      result: extract_result
+                      result: opa_properties_extract_result
 
-                  - prepare:
+                  - prepare_opa_properties:
                       call: http.post
                       args:
-                        url: ${prepare_url}
+                        url: ${opa_properties_prepare_url}
                         auth:
                           type: OIDC
                         timeout: 1800
                         body: {}
-                      result: prepare_result
+                      result: opa_properties_prepare_result
 
-                  - load:
+                  - load_opa_properties:
                       call: http.post
                       args:
-                        url: ${load_url}
+                        url: ${opa_properties_load_url}
                         auth:
                           type: OIDC
                         timeout: 1800
                         body: {}
-                      result: load_result
+                      result: opa_properties_load_result
 
             - opa_assessments:
                 steps:
-                  - assessments_extract:
+                  - extract_opa_assessments:
                       call: http.post
                       args:
-                        url: ${assessments_extract_url}
+                        url: ${opa_assessments_extract_url}
                         auth:
                           type: OIDC
                         timeout: 1800
                         body: {}
-                      result: assessments_extract_result
+                      result: opa_assessments_extract_result
 
-                  - assessments_prepare:
+                  - prepare_opa_assessments:
                       call: http.post
                       args:
-                        url: ${assessments_prepare_url}
+                        url: ${opa_assessments_prepare_url}
                         auth:
                           type: OIDC
                         timeout: 1800
                         body: {}
-                      result: assessments_prepare_result
+                      result: opa_assessments_prepare_result
 
-                  - assessments_load:
+                  - load_opa_assessments:
                       call: http.post
                       args:
-                        url: ${assessments_load_url}
+                        url: ${opa_assessments_load_url}
                         auth:
                           type: OIDC
                         timeout: 1800
                         body: {}
-                      result: assessments_load_result
+                      result: opa_assessments_load_result
 
             - pwd_parcels:
                 steps:
-                  - pwd_parcels_extract:
+                  - extract_pwd_parcels:
                       call: http.post
                       args:
                         url: ${pwd_parcels_extract_url}
@@ -110,7 +127,7 @@ main:
                         body: {}
                       result: pwd_parcels_extract_result
 
-                  - pwd_parcels_prepare:
+                  - prepare_pwd_parcels:
                       call: http.post
                       args:
                         url: ${pwd_parcels_prepare_url}
@@ -120,7 +137,7 @@ main:
                         body: {}
                       result: pwd_parcels_prepare_result
 
-                  - pwd_parcels_load:
+                  - load_pwd_parcels:
                       call: http.post
                       args:
                         url: ${pwd_parcels_load_url}
@@ -130,17 +147,118 @@ main:
                         body: {}
                       result: pwd_parcels_load_result
 
+    - transform_model_training_data:
+        call: http.post
+        args:
+          url: ${transform_model_training_data_url}
+          auth:
+            type: OIDC
+          timeout: 1800
+          body: {}
+        result: transform_model_training_data_result
+
+    - predict_current_assessments:
+        call: googleapis.run.v2.projects.locations.jobs.run
+        args:
+          name: ${"projects/" + project_id + "/locations/" + region + "/jobs/predict-current-assessments"}
+        connector_params:
+          timeout: 3600
+        result: predict_current_assessments_result
+
+    - build_dashboard_assets:
+        parallel:
+          shared:
+            - transform_tax_year_assessment_bins_result
+            - transform_current_assessment_bins_result
+            - export_tax_year_assessment_bins_result
+            - export_current_assessment_bins_result
+            - export_property_tile_info_result
+            - generate_property_map_tiles_result
+          branches:
+            - charts:
+                steps:
+                  - transform_tax_year_assessment_bins:
+                      call: http.post
+                      args:
+                        url: ${transform_tax_year_assessment_bins_url}
+                        auth:
+                          type: OIDC
+                        timeout: 1800
+                        body: {}
+                      result: transform_tax_year_assessment_bins_result
+
+                  - transform_current_assessment_bins:
+                      call: http.post
+                      args:
+                        url: ${transform_current_assessment_bins_url}
+                        auth:
+                          type: OIDC
+                        timeout: 1800
+                        body: {}
+                      result: transform_current_assessment_bins_result
+
+                  - export_tax_year_assessment_bins:
+                      call: http.post
+                      args:
+                        url: ${export_tax_year_assessment_bins_url}
+                        auth:
+                          type: OIDC
+                        timeout: 1800
+                        body: {}
+                      result: export_tax_year_assessment_bins_result
+
+                  - export_current_assessment_bins:
+                      call: http.post
+                      args:
+                        url: ${export_current_assessment_bins_url}
+                        auth:
+                          type: OIDC
+                        timeout: 1800
+                        body: {}
+                      result: export_current_assessment_bins_result
+
+            - map_tiles:
+                steps:
+                  - export_property_tile_info:
+                      call: http.post
+                      args:
+                        url: ${export_property_tile_info_url}
+                        auth:
+                          type: OIDC
+                        timeout: 1800
+                        body: {}
+                      result: export_property_tile_info_result
+
+                  - generate_property_map_tiles:
+                      call: googleapis.run.v2.projects.locations.jobs.run
+                      args:
+                        name: ${"projects/" + project_id + "/locations/" + region + "/jobs/generate-property-map-tiles"}
+                      connector_params:
+                        timeout: 3600
+                      result: generate_property_map_tiles_result
+
     - done:
         return:
-          properties:
-            extract: ${extract_result.body}
-            prepare: ${prepare_result.body}
-            load: ${load_result.body}
-          assessments:
-            extract: ${assessments_extract_result.body}
-            prepare: ${assessments_prepare_result.body}
-            load: ${assessments_load_result.body}
-          pwd_parcels:
-            extract: ${pwd_parcels_extract_result.body}
-            prepare: ${pwd_parcels_prepare_result.body}
-            load: ${pwd_parcels_load_result.body}
+          ingest:
+            opa_properties:
+              extract: ${opa_properties_extract_result.body}
+              prepare: ${opa_properties_prepare_result.body}
+              load: ${opa_properties_load_result.body}
+            opa_assessments:
+              extract: ${opa_assessments_extract_result.body}
+              prepare: ${opa_assessments_prepare_result.body}
+              load: ${opa_assessments_load_result.body}
+            pwd_parcels:
+              extract: ${pwd_parcels_extract_result.body}
+              prepare: ${pwd_parcels_prepare_result.body}
+              load: ${pwd_parcels_load_result.body}
+          model_training_data: ${transform_model_training_data_result.body}
+          prediction_job: ${predict_current_assessments_result}
+          charts:
+            tax_year_transform: ${transform_tax_year_assessment_bins_result.body}
+            current_transform: ${transform_current_assessment_bins_result.body}
+            tax_year_export: ${export_tax_year_assessment_bins_result.body}
+            current_export: ${export_current_assessment_bins_result.body}
+          map_tiles:
+            property_tile_info_export: ${export_property_tile_info_result.body}
+            generate_property_map_tiles_job: ${generate_property_map_tiles_result}
