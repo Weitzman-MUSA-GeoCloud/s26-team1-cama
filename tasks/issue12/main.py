@@ -20,7 +20,7 @@ SELECT
   garage_spaces,
   assessment_year,
   year_built_int
-FROM `musa5090s26-team1.derived.current_assessments_model_training_data_cleaned_v2`
+FROM `musa5090s26-team1.derived.current_assessments_model_training_data`
 WHERE log_sale_price IS NOT NULL
 """
 
@@ -91,9 +91,11 @@ def run_query(client: bigquery.Client, sql: str, label: str) -> None:
 
 def main():
     client = bigquery.Client(project=PROJECT_ID)
+
     run_query(client, TRAIN_SQL, "train model")
     run_query(client, BUILD_PREDICTION_INPUT_SQL, "build prediction input")
     run_query(client, PREDICT_SQL, "write current assessments")
+
     print("All steps completed successfully.")
 
 
