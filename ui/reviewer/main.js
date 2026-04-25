@@ -158,7 +158,7 @@ const predictedValueBins = [
   { lowerBound: 1680000, upperBound: 1690000, propertyCount: 7 },
   { lowerBound: 1720000, upperBound: 1730000, propertyCount: 1 },
   { lowerBound: 1730000, upperBound: 1740000, propertyCount: 20 },
-  { lowerBound: 1790000, upperBound: 1800000, propertyCount: 5 }
+  { lowerBound: 1790000, upperBound: 1800000, propertyCount: 5 },
 ];
 
 const map = L.map("map").setView([39.9526, -75.1652], 12);
@@ -171,7 +171,7 @@ const neighborhoodPoints = [
   { name: "Center City", lat: 39.9526, lng: -75.1652, valueBand: "$100k–$110k" },
   { name: "University City", lat: 39.9607, lng: -75.1993, valueBand: "$90k–$100k" },
   { name: "West Philadelphia", lat: 39.9651, lng: -75.2217, valueBand: "$70k–$80k" },
-  { name: "Fishtown", lat: 39.9697, lng: -75.1339, valueBand: "$120k–$130k" }
+  { name: "Fishtown", lat: 39.9697, lng: -75.1339, valueBand: "$120k–$130k" },
 ];
 
 neighborhoodPoints.forEach((point) => {
@@ -180,11 +180,11 @@ neighborhoodPoints.forEach((point) => {
     weight: 2,
     color: "#ffffff",
     fillColor: "#688898",
-    fillOpacity: 0.9
+    fillOpacity: 0.9,
   })
     .addTo(map)
     .bindPopup(
-      `<strong>${point.name}</strong><br/>Predicted value band: ${point.valueBand}`
+      `<strong>${point.name}</strong><br/>Predicted value band: ${point.valueBand}`,
     );
 });
 
