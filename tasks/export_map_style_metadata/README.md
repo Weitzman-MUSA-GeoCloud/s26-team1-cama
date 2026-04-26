@@ -3,7 +3,9 @@
 This HTTP Cloud Function exports map styling metadata for the reviewer vector
 tile map. The frontend uses the metadata to build legends and default styling
 for numeric property tile fields that are not easy to summarize directly from
-vector tiles in the browser.
+vector tiles in the browser. The exported JSON also includes the vector tile
+connection settings, so the frontend can use `map_style_metadata.json` as the
+single map configuration contract.
 
 ## Frontend Contract
 
@@ -17,6 +19,12 @@ Vector tile source layer:
 
 ```text
 property_tile_info
+```
+
+Vector tile zoom range:
+
+```text
+12 to 18
 ```
 
 Default style field:
@@ -39,6 +47,13 @@ Each field includes:
 - `max`
 - `quantile_breakpoints`
 - `fixed_breakpoints`
+
+The top-level `vector_tiles` object includes:
+
+- `url_template`
+- `source_layer`
+- `minzoom`
+- `maxzoom`
 
 ## Output
 
@@ -63,6 +78,10 @@ All environment variables have defaults:
 - `BQ_DERIVED_DATASET`, default `derived`
 - `PUBLIC_BUCKET`, default `musa5090s26-team1-public`
 - `OUTPUT_BLOB`, default `configs/map_style_metadata.json`
+- `TILE_URL_TEMPLATE`, default `https://storage.googleapis.com/musa5090s26-team1-public/tiles/properties/{z}/{x}/{y}.pbf`
+- `TILE_SOURCE_LAYER`, default `property_tile_info`
+- `TILE_MINZOOM`, default `12`
+- `TILE_MAXZOOM`, default `18`
 
 ## Deploy
 

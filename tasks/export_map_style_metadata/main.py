@@ -14,6 +14,13 @@ DEFAULT_CORE_DATASET = "core"
 DEFAULT_DERIVED_DATASET = "derived"
 DEFAULT_PUBLIC_BUCKET = "musa5090s26-team1-public"
 DEFAULT_OUTPUT_BLOB = "configs/map_style_metadata.json"
+DEFAULT_TILE_URL_TEMPLATE = (
+    "https://storage.googleapis.com/musa5090s26-team1-public"
+    "/tiles/properties/{z}/{x}/{y}.pbf"
+)
+DEFAULT_TILE_SOURCE_LAYER = "property_tile_info"
+DEFAULT_TILE_MINZOOM = "12"
+DEFAULT_TILE_MAXZOOM = "18"
 
 FIELD_LABELS = {
     "current_assessed_value": "Current assessed value",
@@ -62,6 +69,10 @@ def export_map_style_metadata(request):
     derived_dataset = os.getenv("BQ_DERIVED_DATASET", DEFAULT_DERIVED_DATASET)
     public_bucket = os.getenv("PUBLIC_BUCKET", DEFAULT_PUBLIC_BUCKET)
     output_blob = os.getenv("OUTPUT_BLOB", DEFAULT_OUTPUT_BLOB)
+    tile_url_template = os.getenv("TILE_URL_TEMPLATE", DEFAULT_TILE_URL_TEMPLATE)
+    tile_source_layer = os.getenv("TILE_SOURCE_LAYER", DEFAULT_TILE_SOURCE_LAYER)
+    tile_minzoom = int(os.getenv("TILE_MINZOOM", DEFAULT_TILE_MINZOOM))
+    tile_maxzoom = int(os.getenv("TILE_MAXZOOM", DEFAULT_TILE_MAXZOOM))
 
     sql = f"""
     WITH latest_tax_year AS (
@@ -173,6 +184,12 @@ def export_map_style_metadata(request):
             "record_count": row["record_count"],
             "default_style_field": "current_assessed_value",
             "default_breakpoint_type": "quantile_breakpoints",
+            "vector_tiles": {
+                "url_template": tile_url_template,
+                "source_layer": tile_source_layer,
+                "minzoom": tile_minzoom,
+                "maxzoom": tile_maxzoom,
+            },
             "fields": fields,
         }
         payload = json.dumps(metadata)
