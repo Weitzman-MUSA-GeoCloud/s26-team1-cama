@@ -2,6 +2,7 @@ import json
 import os
 from datetime import datetime
 from datetime import timezone
+from decimal import Decimal
 
 import functions_framework
 from google.cloud import bigquery
@@ -27,6 +28,29 @@ FIXED_BREAKPOINTS = {
     "absolute_change": [-250000, -100000, 0, 100000, 250000, 500000],
     "percent_change": [-0.25, -0.1, 0, 0.1, 0.25, 0.5, 1.0],
 }
+
+
+def clean_breakpoints(values):
+    breakpoints = []
+    seen = set()
+
+    for value in values or []:
+        if value is None:
+            continue
+
+        if isinstance(value, Decimal):
+            value = float(value)
+
+        if isinstance(value, float) and value.is_integer():
+            value = int(value)
+
+        if value in seen:
+            continue
+
+        seen.add(value)
+        breakpoints.append(value)
+
+    return breakpoints
 
 
 @functions_framework.http
@@ -101,35 +125,27 @@ def export_map_style_metadata(request):
         COUNT(*) AS record_count,
         MIN(current_assessed_value) AS current_assessed_value_min,
         MAX(current_assessed_value) AS current_assessed_value_max,
-        ARRAY(
-            SELECT DISTINCT breakpoint
-            FROM UNNEST(APPROX_QUANTILES(current_assessed_value, 5)) AS breakpoint
-            WHERE breakpoint IS NOT NULL
-            ORDER BY breakpoint
+        APPROX_QUANTILES(
+            current_assessed_value,
+            5
         ) AS current_assessed_value_quantiles,
         MIN(tax_year_assessed_value) AS tax_year_assessed_value_min,
         MAX(tax_year_assessed_value) AS tax_year_assessed_value_max,
-        ARRAY(
-            SELECT DISTINCT breakpoint
-            FROM UNNEST(APPROX_QUANTILES(tax_year_assessed_value, 5)) AS breakpoint
-            WHERE breakpoint IS NOT NULL
-            ORDER BY breakpoint
+        APPROX_QUANTILES(
+            tax_year_assessed_value,
+            5
         ) AS tax_year_assessed_value_quantiles,
         MIN(absolute_change) AS absolute_change_min,
         MAX(absolute_change) AS absolute_change_max,
-        ARRAY(
-            SELECT DISTINCT breakpoint
-            FROM UNNEST(APPROX_QUANTILES(absolute_change, 5)) AS breakpoint
-            WHERE breakpoint IS NOT NULL
-            ORDER BY breakpoint
+        APPROX_QUANTILES(
+            absolute_change,
+            5
         ) AS absolute_change_quantiles,
         MIN(percent_change) AS percent_change_min,
         MAX(percent_change) AS percent_change_max,
-        ARRAY(
-            SELECT DISTINCT breakpoint
-            FROM UNNEST(APPROX_QUANTILES(percent_change, 5)) AS breakpoint
-            WHERE breakpoint IS NOT NULL
-            ORDER BY breakpoint
+        APPROX_QUANTILES(
+            percent_change,
+            5
         ) AS percent_change_quantiles
     FROM style_values
     """
@@ -145,7 +161,9 @@ def export_map_style_metadata(request):
                 "label": label,
                 "min": row[f"{field_name}_min"],
                 "max": row[f"{field_name}_max"],
-                "quantile_breakpoints": list(row[f"{field_name}_quantiles"]),
+                "quantile_breakpoints": clean_breakpoints(
+                    row[f"{field_name}_quantiles"]
+                ),
                 "fixed_breakpoints": FIXED_BREAKPOINTS[field_name],
             }
 
