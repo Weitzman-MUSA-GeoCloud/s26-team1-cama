@@ -161,17 +161,120 @@ const predictedValueBins = [
   { lowerBound: 1790000, upperBound: 1800000, propertyCount: 5 },
 ];
 
-const map = L.map("map").setView([39.9526, -75.1652], 12);
+const map = L.map("map").setView([40.04, -75.28], 12);
 
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   attribution: "&copy; OpenStreetMap contributors",
 }).addTo(map);
 
+const propertyTileUrl =
+  "https://storage.googleapis.com/musa5090s26-team1-public/tiles/properties/{z}/{x}/{y}.pbf";
+
+const propertyTileLayerName = "property_tile_info";
+
+function getAssessmentColor(value) {
+  const numericValue = Number(value);
+
+  if (!Number.isFinite(numericValue)) {
+    return "#d1d5db";
+  }
+
+  if (numericValue < 100000) {
+    return "#fee5d9";
+  }
+
+  if (numericValue < 250000) {
+    return "#fcae91";
+  }
+
+  if (numericValue < 500000) {
+    return "#fb6a4a";
+  }
+
+  if (numericValue < 750000) {
+    return "#de2d26";
+  }
+
+  if (numericValue < 1000000) {
+    return "#a50f15";
+  }
+
+  return "#67000d";
+}
+
+console.log("VectorGrid available?", L.vectorGrid);
+
+const propertyTileLayer = L.vectorGrid.protobuf(propertyTileUrl, {
+  rendererFactory: L.canvas.tile,
+  interactive: true,
+  minZoom: 12,
+  maxZoom: 18,
+  maxNativeZoom: 18,
+  vectorTileLayerStyles: {
+    [propertyTileLayerName]: (properties) => {
+      console.log("property tile props", properties);
+
+      return {
+        fill: true,
+        fillColor: getAssessmentColor(properties.current_assessed_value),
+        fillOpacity: 0.65,
+        color: "#ffffff",
+        opacity: 0.4,
+        weight: 0.5,
+      };
+    },
+  },
+});
+
+propertyTileLayer.on("click", (event) => {
+  const props = event.layer.properties;
+
+  L.popup()
+    .setLatLng(event.latlng)
+    .setContent(`
+      <strong>${props.address || "Unknown address"}</strong><br>
+      Property ID: ${props.property_id || "N/A"}<br>
+      Current assessed value: ${
+        props.current_assessed_value
+          ? `$${Number(props.current_assessed_value).toLocaleString()}`
+          : "N/A"
+      }<br>
+      Tax year assessed value: ${
+        props.tax_year_assessed_value
+          ? `$${Number(props.tax_year_assessed_value).toLocaleString()}`
+          : "N/A"
+      }
+    `)
+    .openOn(map);
+});
+
+propertyTileLayer.addTo(map);
+
 const neighborhoodPoints = [
-  { name: "Center City", lat: 39.9526, lng: -75.1652, valueBand: "$100k–$110k" },
-  { name: "University City", lat: 39.9607, lng: -75.1993, valueBand: "$90k–$100k" },
-  { name: "West Philadelphia", lat: 39.9651, lng: -75.2217, valueBand: "$70k–$80k" },
-  { name: "Fishtown", lat: 39.9697, lng: -75.1339, valueBand: "$120k–$130k" }
+  {
+    name: "Center City",
+    lat: 39.9526,
+    lng: -75.1652,
+    valueBand: "$100k–$110k",
+  },
+  {
+    name: "University City",
+    lat: 39.9607,
+    lng: -75.1993,
+    valueBand: "$90k–$100k",
+  },
+  {
+    name: "West Philadelphia",
+    lat: 39.9651,
+    lng: -75.2217,
+    valueBand: "$70k–$80k",
+  },
+  {
+    name: "Fishtown",
+    lat: 39.9697,
+    lng: -75.1339,
+    valueBand: "$120k–$130k",
+  },
 ];
 
 neighborhoodPoints.forEach((point) => {
@@ -180,11 +283,11 @@ neighborhoodPoints.forEach((point) => {
     weight: 2,
     color: "#ffffff",
     fillColor: "#688898",
-    fillOpacity: 0.9
+    fillOpacity: 0.9,
   })
     .addTo(map)
     .bindPopup(
-      `<strong>${point.name}</strong><br/>Predicted value band: ${point.valueBand}`
+      `<strong>${point.name}</strong><br/>Predicted value band: ${point.valueBand}`,
     );
 });
 
@@ -199,15 +302,18 @@ function formatYAxisValue(value) {
 function renderDistributionHistogram(data) {
   const container = document.getElementById("distributionChart");
   const yAxis = document.getElementById("distributionYAxis");
-  if (!container || !yAxis) return;
+
+  if (!container || !yAxis) {
+    return;
+  }
 
   container.innerHTML = "";
   yAxis.innerHTML = "";
 
   const maxCount = Math.max(...data.map((d) => d.propertyCount));
-
   const tickCount = 5;
-  for (let i = tickCount; i >= 0; i--) {
+
+  for (let i = tickCount; i >= 0; i -= 1) {
     const tick = document.createElement("div");
     tick.textContent = formatYAxisValue((maxCount / tickCount) * i);
     yAxis.appendChild(tick);
@@ -223,7 +329,10 @@ function renderDistributionHistogram(data) {
     const bar = document.createElement("div");
     bar.className = "histogram-bar";
     bar.style.height = `${(bin.propertyCount / maxCount) * 100}%`;
-    bar.title = `${formatBinLabel(bin.lowerBound, bin.upperBound)}: ${bin.propertyCount.toLocaleString()} properties`;
+    bar.title = `${formatBinLabel(
+      bin.lowerBound,
+      bin.upperBound,
+    )}: ${bin.propertyCount.toLocaleString()} properties`;
 
     const label = document.createElement("span");
     label.className = "histogram-label";
