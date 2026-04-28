@@ -4,22 +4,24 @@ main:
         assign:
           - project_id: "musa5090s26-team1"
           - region: "us-east4"
-          - function_base_url: "https://us-east4-musa5090s26-team1.cloudfunctions.net"
-          - opa_properties_extract_url: ${function_base_url + "/extract-opa-properties"}
-          - opa_properties_prepare_url: ${function_base_url + "/prepare-opa-properties"}
-          - opa_properties_load_url: ${function_base_url + "/load-opa-properties"}
-          - opa_assessments_extract_url: ${function_base_url + "/extract-opa-assessments"}
-          - opa_assessments_prepare_url: ${function_base_url + "/prepare-opa-assessments"}
-          - opa_assessments_load_url: ${function_base_url + "/load-opa-assessments"}
-          - pwd_parcels_extract_url: ${function_base_url + "/extract-pwd-parcels"}
-          - pwd_parcels_prepare_url: ${function_base_url + "/prepare-pwd-parcels"}
-          - pwd_parcels_load_url: ${function_base_url + "/load-pwd-parcels"}
-          - transform_model_training_data_url: ${function_base_url + "/transform-model-training-data"}
-          - transform_tax_year_assessment_bins_url: ${function_base_url + "/transform-tax-year-assessment-bins"}
-          - transform_current_assessment_bins_url: ${function_base_url + "/transform-current-assessment-bins"}
-          - export_tax_year_assessment_bins_url: ${function_base_url + "/export-tax-year-assessment-bins"}
-          - export_current_assessment_bins_url: ${function_base_url + "/export-current-assessment-bins"}
-          - export_property_tile_info_url: ${function_base_url + "/export-property-tile-info"}
+          - opa_properties_extract_url: "https://extract-opa-properties-bl43esqwsa-uk.a.run.app"
+          - opa_properties_prepare_url: "https://prepare-opa-properties-bl43esqwsa-uk.a.run.app"
+          - opa_properties_load_url: "https://load-opa-properties-bl43esqwsa-uk.a.run.app"
+          - opa_assessments_extract_url: "https://extract-opa-assessments-bl43esqwsa-uk.a.run.app"
+          - opa_assessments_prepare_url: "https://prepare-opa-assessments-bl43esqwsa-uk.a.run.app"
+          - opa_assessments_load_url: "https://load-opa-assessments-bl43esqwsa-uk.a.run.app"
+          - pwd_parcels_extract_url: "https://extract-pwd-parcels-bl43esqwsa-uk.a.run.app"
+          - pwd_parcels_prepare_url: "https://prepare-pwd-parcels-bl43esqwsa-uk.a.run.app"
+          - pwd_parcels_load_url: "https://load-pwd-parcels-bl43esqwsa-uk.a.run.app"
+          - transform_model_training_data_url: "https://transform-model-training-data-bl43esqwsa-uk.a.run.app"
+          - transform_tax_year_assessment_bins_url: "https://transform-tax-year-assessment-bins-bl43esqwsa-uk.a.run.app"
+          - transform_current_assessment_bins_url: "https://transform-current-assessment-bins-bl43esqwsa-uk.a.run.app"
+          - export_tax_year_assessment_bins_url: "https://export-tax-year-assessment-bins-bl43esqwsa-uk.a.run.app"
+          - export_current_assessment_bins_url: "https://export-current-assessment-bins-bl43esqwsa-uk.a.run.app"
+          - export_property_tile_info_url: "https://export-property-tile-info-bl43esqwsa-uk.a.run.app"
+          - export_map_style_metadata_url: "https://export-map-style-metadata-bl43esqwsa-uk.a.run.app"
+          - predict_current_assessments_job: "predict-current-assessments"
+          - generate_property_map_tiles_job: "generate-property-map-tiles"
           - opa_properties_extract_result: null
           - opa_properties_prepare_result: null
           - opa_properties_load_result: null
@@ -36,6 +38,7 @@ main:
           - export_tax_year_assessment_bins_result: null
           - export_current_assessment_bins_result: null
           - export_property_tile_info_result: null
+          - export_map_style_metadata_result: null
           - generate_property_map_tiles_result: null
 
     - run_ingest_pipelines:
@@ -160,9 +163,10 @@ main:
     - predict_current_assessments:
         call: googleapis.run.v2.projects.locations.jobs.run
         args:
-          name: ${"projects/" + project_id + "/locations/" + region + "/jobs/predict-current-assessments"}
-        connector_params:
-          timeout: 3600
+          name: ${"projects/" + project_id + "/locations/" + region + "/jobs/" + predict_current_assessments_job}
+          body: {}
+          connector_params:
+            timeout: 1800
         result: predict_current_assessments_result
 
     - build_dashboard_assets:
@@ -173,9 +177,10 @@ main:
             - export_tax_year_assessment_bins_result
             - export_current_assessment_bins_result
             - export_property_tile_info_result
+            - export_map_style_metadata_result
             - generate_property_map_tiles_result
           branches:
-            - charts:
+            - tax_year_chart:
                 steps:
                   - transform_tax_year_assessment_bins:
                       call: http.post
@@ -187,16 +192,6 @@ main:
                         body: {}
                       result: transform_tax_year_assessment_bins_result
 
-                  - transform_current_assessment_bins:
-                      call: http.post
-                      args:
-                        url: ${transform_current_assessment_bins_url}
-                        auth:
-                          type: OIDC
-                        timeout: 1800
-                        body: {}
-                      result: transform_current_assessment_bins_result
-
                   - export_tax_year_assessment_bins:
                       call: http.post
                       args:
@@ -206,6 +201,18 @@ main:
                         timeout: 1800
                         body: {}
                       result: export_tax_year_assessment_bins_result
+
+            - current_chart:
+                steps:
+                  - transform_current_assessment_bins:
+                      call: http.post
+                      args:
+                        url: ${transform_current_assessment_bins_url}
+                        auth:
+                          type: OIDC
+                        timeout: 1800
+                        body: {}
+                      result: transform_current_assessment_bins_result
 
                   - export_current_assessment_bins:
                       call: http.post
@@ -217,7 +224,7 @@ main:
                         body: {}
                       result: export_current_assessment_bins_result
 
-            - map_tiles:
+            - property_tiles:
                 steps:
                   - export_property_tile_info:
                       call: http.post
@@ -232,10 +239,23 @@ main:
                   - generate_property_map_tiles:
                       call: googleapis.run.v2.projects.locations.jobs.run
                       args:
-                        name: ${"projects/" + project_id + "/locations/" + region + "/jobs/generate-property-map-tiles"}
-                      connector_params:
-                        timeout: 3600
+                        name: ${"projects/" + project_id + "/locations/" + region + "/jobs/" + generate_property_map_tiles_job}
+                        body: {}
+                        connector_params:
+                          timeout: 3600
                       result: generate_property_map_tiles_result
+
+            - map_style_metadata:
+                steps:
+                  - export_map_style_metadata:
+                      call: http.post
+                      args:
+                        url: ${export_map_style_metadata_url}
+                        auth:
+                          type: OIDC
+                        timeout: 1800
+                        body: {}
+                      result: export_map_style_metadata_result
 
     - done:
         return:
@@ -252,13 +272,16 @@ main:
               extract: ${pwd_parcels_extract_result.body}
               prepare: ${pwd_parcels_prepare_result.body}
               load: ${pwd_parcels_load_result.body}
-          model_training_data: ${transform_model_training_data_result.body}
-          prediction_job: ${predict_current_assessments_result}
-          charts:
-            tax_year_transform: ${transform_tax_year_assessment_bins_result.body}
-            current_transform: ${transform_current_assessment_bins_result.body}
-            tax_year_export: ${export_tax_year_assessment_bins_result.body}
-            current_export: ${export_current_assessment_bins_result.body}
-          map_tiles:
-            property_tile_info_export: ${export_property_tile_info_result.body}
-            generate_property_map_tiles_job: ${generate_property_map_tiles_result}
+          transforms:
+            model_training_data: ${transform_model_training_data_result.body}
+            tax_year_assessment_bins: ${transform_tax_year_assessment_bins_result.body}
+            current_assessment_bins: ${transform_current_assessment_bins_result.body}
+          model:
+            predict_current_assessments: ${predict_current_assessments_result}
+          exports:
+            tax_year_assessment_bins: ${export_tax_year_assessment_bins_result.body}
+            current_assessment_bins: ${export_current_assessment_bins_result.body}
+            property_tile_info: ${export_property_tile_info_result.body}
+            map_style_metadata: ${export_map_style_metadata_result.body}
+          jobs:
+            generate_property_map_tiles: ${generate_property_map_tiles_result}
