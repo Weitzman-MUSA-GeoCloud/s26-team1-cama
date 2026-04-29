@@ -14,22 +14,22 @@ const DEFAULT_TILE_LAYER = "property_tile_info";
 const MAIN_DISPLAY_MAX = 2500000;
 const MAIN_DISPLAY_BIN_SIZE = 100000;
 const VALUE_COLORS = [
-  "#eff6ff",
   "#dbeafe",
   "#bfdbfe",
   "#93c5fd",
   "#60a5fa",
+  "#3b82f6",
   "#2563eb",
   "#1e3a8a",
 ];
 const GAP_UNAVAILABLE_COLOR = "#d9dde5";
 const GAP_BINS = [
   { max: -75, label: "&le; -75%", color: "#53627f" },
-  { min: -75, max: -60, label: "-75% to -60%", color: "#7183a3" },
-  { min: -60, max: -45, label: "-60% to -45%", color: "#9caac2" },
-  { min: -45, max: -25, label: "-45% to -25%", color: "#c0c9d8" },
+  { min: -75, max: -50, label: "-75% to -50%", color: "#7183a3" },
+  { min: -50, max: -25, label: "-50% to -25%", color: "#a7b2c7" },
   { min: -25, max: 25, label: "-25% to +25%", color: "#e5e7eb" },
-  { min: 25, max: 75, label: "+25% to +75%", color: "#c99a5c" },
+  { min: 25, max: 50, label: "+25% to +50%", color: "#d6b071" },
+  { min: 50, max: 75, label: "+50% to +75%", color: "#b9793f" },
   { min: 75, label: "&gt; +75%", color: "#87552c" },
 ];
 
@@ -156,6 +156,12 @@ function normalizeZip(value) {
   return String(value ?? "").trim().slice(0, 5);
 }
 
+function getFeatureZip(properties) {
+  return normalizeZip(
+    properties.zip_code ?? properties.ZIP_CODE ?? properties.zip ?? properties.Zip,
+  );
+}
+
 function getTilePropertyValue(properties, modeName = activeMode) {
   if (modeName === "gap") {
     const official = Number(properties.tax_year_assessed_value);
@@ -175,39 +181,66 @@ function getTilePropertyValue(properties, modeName = activeMode) {
   return Number(properties[modes[modeName].field]);
 }
 
-function getBreakpoints(modeName = activeMode) {
-  const mode = modes[modeName];
-  const fieldMetadata = metadata?.fields?.[mode.metadataField];
-  const breakpoints =
-    fieldMetadata?.quantile_breakpoints || fieldMetadata?.fixed_breakpoints || [];
+function computeWeightedQuantileBreaksFromBins(bins, classCount = 7) {
+  const rows = normalizeBinRows(bins).filter((row) => row.propertyCount > 0);
+  const total = rows.reduce((sum, row) => sum + row.propertyCount, 0);
 
-  return breakpoints
-    .map((value) => Number(value))
-    .filter((value) => Number.isFinite(value))
-    .sort((left, right) => left - right);
-}
-
-function getValueClassBreaks(modeName = activeMode) {
-  const breakpoints = getBreakpoints(modeName);
-
-  if (breakpoints.length >= VALUE_COLORS.length + 1) {
-    return breakpoints.slice(0, VALUE_COLORS.length + 1);
-  }
-
-  if (breakpoints.length >= 2) {
-    const min = breakpoints[0];
-    const max = breakpoints[breakpoints.length - 1];
-    const step = (max - min) / VALUE_COLORS.length;
-
+  if (rows.length === 0 || total === 0) {
     return Array.from(
-      { length: VALUE_COLORS.length + 1 },
-      (_item, index) => min + step * index,
+      { length: classCount + 1 },
+      (_item, index) => index * 250000,
     );
   }
 
-  return Array.from(
-    { length: VALUE_COLORS.length + 1 },
-    (_item, index) => index * 250000,
+  const breaks = [];
+
+  for (let index = 0; index <= classCount; index += 1) {
+    const target = (total * index) / classCount;
+    let cumulative = 0;
+    let threshold = rows[rows.length - 1].lowerBound;
+
+    for (const row of rows) {
+      const previous = cumulative;
+      cumulative += row.propertyCount;
+
+      if (cumulative >= target) {
+        const upperBound =
+          row.upperBound === null
+            ? row.lowerBound + MAIN_DISPLAY_BIN_SIZE
+            : row.upperBound;
+        const binShare =
+          row.propertyCount === 0 ? 0 : (target - previous) / row.propertyCount;
+        threshold = row.lowerBound + (upperBound - row.lowerBound) * binShare;
+        break;
+      }
+    }
+
+    breaks.push(Math.round(threshold));
+  }
+
+  return breaks.map((value, index) => {
+    if (index === 0) {
+      return value;
+    }
+
+    return Math.max(value, breaks[index - 1] + 1);
+  });
+}
+
+function getChoroplethBins(modeName = activeMode) {
+  const area = getAreaData();
+  const rows =
+    modeName === "estimate" ? area.modelRows : area.officialRows;
+  const fallbackRows =
+    modeName === "estimate" ? citywideModelRows : citywideOfficialRows;
+
+  return rows.length > 0 ? rows : fallbackRows;
+}
+
+function getValueClassBreaks(modeName = activeMode) {
+  return computeWeightedQuantileBreaksFromBins(
+    getChoroplethBins(modeName),
+    VALUE_COLORS.length,
   );
 }
 
@@ -256,9 +289,10 @@ function getColor(value, modeName = activeMode) {
 
 function styleFeature(properties) {
   const value = getTilePropertyValue(properties);
+  const featureZip = getFeatureZip(properties);
   const outsideSelectedZip =
     activeGeography !== "citywide" &&
-    normalizeZip(properties.zip_code) !== normalizeZip(activeGeography);
+    featureZip !== normalizeZip(activeGeography);
   const gapUnavailable = activeMode === "gap" && !Number.isFinite(Number(value));
 
   return {
@@ -352,6 +386,7 @@ function renderTileLayer() {
   propertyTileLayer.on("mouseover", (event) => {
     const properties = event.layer.properties;
     const value = getTilePropertyValue(properties);
+    const featureZip = getFeatureZip(properties);
     const gapLine =
       activeMode === "gap"
         ? `<br>Gap: ${Number.isFinite(Number(value)) ? formatGapPercent(value) : "unavailable"}`
@@ -365,7 +400,7 @@ function renderTileLayer() {
       .setLatLng(event.latlng)
       .setContent(`
         <strong>${properties.address || "Address not available"}</strong><br>
-        ZIP: ${properties.zip_code || "N/A"}<br>
+        ZIP: ${featureZip || "N/A"}<br>
         Official: ${formatMoney(properties.tax_year_assessed_value)}<br>
         Estimate: ${formatMoney(properties.current_assessed_value)}${gapLine}
       `)
@@ -384,7 +419,7 @@ function renderTileLayer() {
 
     if (
       activeGeography !== "citywide" &&
-      normalizeZip(properties.zip_code) !== normalizeZip(activeGeography)
+      getFeatureZip(properties) !== normalizeZip(activeGeography)
     ) {
       setStatus(`That property is outside ZIP ${activeGeography}.`);
       return;
@@ -914,7 +949,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (
       selectedProperties &&
       activeGeography !== "citywide" &&
-      normalizeZip(selectedProperties.zip_code) !== normalizeZip(activeGeography)
+      getFeatureZip(selectedProperties) !== normalizeZip(activeGeography)
     ) {
       clearSelection();
     }
