@@ -60,7 +60,7 @@ h3 {
 
 h1 {
   margin: 0;
-  font-size: 1.7rem;
+  font-size: 1.45rem;
 }
 
 h2 {
@@ -76,14 +76,14 @@ h3 {
 .mode-toggle {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
   justify-content: flex-end;
 }
 
 .toolbar-controls {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
   justify-content: flex-end;
 }
 
@@ -92,15 +92,15 @@ h3 {
   align-items: center;
   gap: 8px;
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: 0.82rem;
   font-weight: 700;
 }
 
 .geography-control select {
-  min-height: 38px;
+  min-height: 34px;
   border: 1px solid var(--border);
   border-radius: 999px;
-  padding: 8px 12px;
+  padding: 6px 10px;
   background: var(--surface);
   color: var(--text);
   font-weight: 700;
@@ -117,7 +117,8 @@ h3 {
 }
 
 .mode-button {
-  padding: 9px 12px;
+  padding: 7px 10px;
+  font-size: 0.86rem;
 }
 
 .mode-button.active {
@@ -153,6 +154,21 @@ h3 {
   display: none;
 }
 
+.zip-zoom-message {
+  position: absolute;
+  top: 84px;
+  left: 28px;
+  z-index: 500;
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid #c8d7e6;
+  border-radius: 6px;
+  background: rgb(248 251 255 / 94%);
+  color: var(--accent);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
 .sidebar {
   overflow-y: auto;
   border-left: 1px solid var(--border);
@@ -173,7 +189,7 @@ h3 {
 
 .summary-grid,
 .detail-list {
-  margin: 18px 0;
+  margin: 14px 0;
 }
 
 .summary-grid div,
@@ -181,8 +197,15 @@ h3 {
   display: flex;
   justify-content: space-between;
   gap: 16px;
-  padding: 10px 0;
+  padding: 8px 0;
   border-bottom: 1px solid var(--border-soft);
+}
+
+.summary-grid {
+  padding: 4px 12px;
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  background: #fbfcfd;
 }
 
 .summary-grid dt,
@@ -204,6 +227,16 @@ h3 {
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--surface-soft);
+}
+
+.chart-card-primary {
+  border-color: #b6cbe1;
+  background: #f8fbff;
+}
+
+.chart-card-secondary {
+  border-color: var(--border-soft);
+  background: #fbfcfd;
 }
 
 .mini-chart {
@@ -230,6 +263,32 @@ h3 {
 .text-button:hover {
   border-color: var(--accent);
   color: var(--accent);
+}
+
+.selected-group {
+  margin-bottom: 16px;
+}
+
+.selected-group h3 {
+  margin-top: 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-soft);
+}
+
+#selectedGapValue {
+  font-variant-numeric: tabular-nums;
+}
+
+.gap-positive {
+  color: #87552c;
+}
+
+.gap-negative {
+  color: var(--accent);
+}
+
+.gap-neutral {
+  color: var(--muted);
 }
 
 .map-legend {

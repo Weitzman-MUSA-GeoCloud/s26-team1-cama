@@ -97,14 +97,30 @@ function formatOfficialChange(official) {
     official.change_pct === null ||
     official.change_pct === undefined
   ) {
-    return "Prior-year comparison is not available.";
+    return {
+      className: "change-neutral",
+      text: "Prior-year comparison is not available.",
+    };
   }
 
-  const latest = formatMoney(official.latest_assessed_value);
   const prior = formatMoney(official.prior_assessed_value);
-  const pct = formatPercent(official.change_pct);
+  const changePct = Number(official.change_pct);
 
-  return `${latest} compared with ${prior} in Tax Year ${official.prior_tax_year} (${pct}).`;
+  if (changePct === 0) {
+    return {
+      className: "change-neutral",
+      text: `— No change from Tax Year ${official.prior_tax_year} (${prior}).`,
+    };
+  }
+
+  const direction = changePct > 0 ? "increase" : "decrease";
+  const symbol = changePct > 0 ? "▲" : "▼";
+  const className = changePct > 0 ? "change-positive" : "change-negative";
+
+  return {
+    className,
+    text: `${symbol} ${formatPercent(Math.abs(changePct))} ${direction} from Tax Year ${official.prior_tax_year} (${prior}).`,
+  };
 }
 
 function formatEstimateGap(estimate) {
@@ -246,18 +262,20 @@ function renderProperty(payload) {
     official.latest_tax_year !== null && official.latest_tax_year !== undefined
       ? `Tax Year ${official.latest_tax_year}`
       : "Tax Year not available";
-  document.getElementById("officialChangeText").textContent =
-    formatOfficialChange(official);
+  const officialChange = formatOfficialChange(official);
+  const officialChangeElement = document.getElementById("officialChangeText");
+  officialChangeElement.className = `change-text ${officialChange.className}`;
+  officialChangeElement.textContent = officialChange.text;
 
   document.getElementById("contextCard").hidden =
     !citywideOfficialPercentile && !zipOfficialPercentile;
   document.getElementById("citywideContextText").textContent =
     citywideOfficialPercentile
-      ? `This official assessed value is around the ${citywideOfficialPercentile} percentile citywide.`
+      ? `Citywide: around the ${citywideOfficialPercentile} percentile.`
       : "Citywide context is unavailable.";
   document.getElementById("zipContextText").textContent =
     zipOfficialPercentile && context.zip
-      ? `Around the ${zipOfficialPercentile} percentile among residential parcels in ${context.zip.label}.`
+      ? `${context.zip.label}: around the ${zipOfficialPercentile} percentile.`
       : "";
 
   document.getElementById("estimateValueText").textContent = formatMoney(

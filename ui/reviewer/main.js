@@ -13,6 +13,7 @@ const DEFAULT_TILE_URL = `${PUBLIC_BASE_URL}/tiles/properties/{z}/{x}/{y}.pbf`;
 const DEFAULT_TILE_LAYER = "property_tile_info";
 const MAIN_DISPLAY_MAX = 2500000;
 const MAIN_DISPLAY_BIN_SIZE = 100000;
+const ZIP_DETAIL_MIN_ZOOM = 14;
 const VALUE_COLORS = ["#eff6ff", "#bfdbfe", "#93c5fd", "#60a5fa", "#2563eb", "#1e3a8a"];
 const GAP_UNAVAILABLE_COLOR = "#d9dde5";
 const GAP_BINS = [
@@ -142,6 +143,28 @@ function setStatus(message = "") {
   document.getElementById("mapStatus").textContent = message;
 }
 
+function shouldApplyZipDetailTreatment() {
+  return activeGeography !== "citywide" && map.getZoom() >= ZIP_DETAIL_MIN_ZOOM;
+}
+
+function updateZipZoomMessage() {
+  const message = document.getElementById("zipZoomMessage");
+  const shouldShow =
+    activeGeography !== "citywide" && map.getZoom() < ZIP_DETAIL_MIN_ZOOM;
+
+  message.hidden = !shouldShow;
+}
+
+function ensureZipDetailZoom() {
+  if (activeGeography === "citywide" || !map) {
+    return;
+  }
+
+  if (map.getZoom() < ZIP_DETAIL_MIN_ZOOM) {
+    map.setZoom(ZIP_DETAIL_MIN_ZOOM);
+  }
+}
+
 function getTilePropertyValue(properties, modeName = activeMode) {
   if (modeName === "gap") {
     const official = Number(properties.tax_year_assessed_value);
@@ -218,7 +241,7 @@ function getColor(value, modeName = activeMode) {
 function styleFeature(properties) {
   const value = getTilePropertyValue(properties);
   const outsideSelectedZip =
-    activeGeography !== "citywide" && properties.zip_code !== activeGeography;
+    shouldApplyZipDetailTreatment() && properties.zip_code !== activeGeography;
   const gapUnavailable = activeMode === "gap" && !Number.isFinite(Number(value));
 
   return {
@@ -338,7 +361,10 @@ function renderTileLayer() {
   propertyTileLayer.on("click", (event) => {
     const properties = event.layer.properties;
 
-    if (activeGeography !== "citywide" && properties.zip_code !== activeGeography) {
+    if (
+      shouldApplyZipDetailTreatment() &&
+      properties.zip_code !== activeGeography
+    ) {
       setStatus(`That property is outside ZIP ${activeGeography}.`);
       return;
     }
@@ -620,6 +646,24 @@ function renderModeControls() {
   }
 }
 
+function getGapClass(value) {
+  const number = Number(value);
+
+  if (!Number.isFinite(number)) {
+    return "gap-neutral";
+  }
+
+  if (number > 0) {
+    return "gap-positive";
+  }
+
+  if (number < 0) {
+    return "gap-negative";
+  }
+
+  return "gap-neutral";
+}
+
 function calculateGapValue(properties) {
   const official = Number(properties.tax_year_assessed_value);
   const estimate = Number(properties.current_assessed_value);
@@ -757,8 +801,11 @@ function renderSelectedProperty(properties) {
   document.getElementById("selectedEstimateValue").textContent = formatMoney(
     properties.current_assessed_value,
   );
-  document.getElementById("selectedGapValue").textContent =
-    `${formatMoney(calculateGapValue(properties))} (${formatGapPercent(calculateGapPercent(properties))})`;
+  const gapPercent = calculateGapPercent(properties);
+  const selectedGapElement = document.getElementById("selectedGapValue");
+  selectedGapElement.className = getGapClass(gapPercent);
+  selectedGapElement.textContent =
+    `${formatMoney(calculateGapValue(properties))} (${formatGapPercent(gapPercent)})`;
   document.getElementById("selectedHistoryHelper").textContent =
     "Loading assessment history...";
   document.getElementById("selectedHistoryChart").innerHTML = "";
@@ -819,6 +866,7 @@ async function initializeDashboard() {
     updateSummary();
     updateCharts();
     renderTileLayer();
+    updateZipZoomMessage();
     setStatus("");
   } catch (error) {
     setStatus(
@@ -830,6 +878,7 @@ async function initializeDashboard() {
     zipContext = zipContext || { areas: {} };
     updateSummary();
     renderTileLayer();
+    updateZipZoomMessage();
   }
 }
 
@@ -843,6 +892,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("geographySelect").addEventListener("change", (event) => {
     activeGeography = event.target.value;
+    ensureZipDetailZoom();
     if (
       selectedProperties &&
       activeGeography !== "citywide" &&
@@ -852,9 +902,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     updateSummary();
     updateCharts();
+    updateZipZoomMessage();
     renderTileLayer();
   });
 
   document.getElementById("clearSelectionBtn").addEventListener("click", clearSelection);
+  map.on("zoomend", () => {
+    updateZipZoomMessage();
+    if (propertyTileLayer) {
+      renderTileLayer();
+    }
+  });
   initializeDashboard();
 });

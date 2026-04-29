@@ -15,6 +15,8 @@
   --accent-dark: #164a78;
   --success: #1f7a4d;
   --error: #9f1d24;
+  --increase: #8a5a22;
+  --decrease: #1f5f99;
 }
 
 body {
@@ -140,11 +142,11 @@ body {
 .lookup-message {
   margin-top: 8px;
   font-size: 0.92rem;
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .lookup-message[data-type="success"] {
-  color: var(--success);
+  color: var(--muted);
 }
 
 .lookup-message[data-type="error"] {
@@ -197,6 +199,7 @@ body {
 
 .official-card {
   border-color: #9ab9d8;
+  border-left: 6px solid var(--accent);
   background: #f8fbff;
 }
 
@@ -211,16 +214,35 @@ body {
 .change-text {
   margin: 12px 0 0;
   color: var(--text);
+  font-weight: 700;
   line-height: 1.45;
 }
 
+.change-positive {
+  color: var(--increase);
+}
+
+.change-negative {
+  color: var(--decrease);
+}
+
+.change-neutral {
+  color: var(--muted);
+}
+
 .context-card {
+  border-color: var(--border-soft);
   background: #fbfcfd;
+  padding: 14px 16px;
+}
+
+.context-card h2 {
+  font-size: 1rem;
 }
 
 .context-text {
-  margin: 8px 0 0;
-  color: var(--text);
+  margin: 6px 0 0;
+  color: var(--muted);
   line-height: 1.45;
 }
 

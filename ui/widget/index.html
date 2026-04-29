@@ -31,7 +31,8 @@
         <button id="searchBtn" type="button">Look up</button>
       </div>
       <p id="lookupHelp" class="helper-text">
-        Enter a Philadelphia OPA property identifier to view official assessment history.
+        Enter a Philadelphia OPA property ID. You can find it on a Real Estate
+        Tax bill or at atlas.phila.gov.
       </p>
       <p id="lookupMessage" class="lookup-message" role="status" aria-live="polite"></p>
     </section>
@@ -39,8 +40,8 @@
     <section id="emptyState" class="card empty-state">
       <h2>Start with a property ID</h2>
       <p>
-        This widget uses the project lookup API. Results will appear here after
-        a successful lookup.
+        Enter a Philadelphia OPA property ID to view the official assessment
+        record, recent history, and an informational market estimate.
       </p>
     </section>
 
@@ -68,19 +69,19 @@
         <p id="officialChangeText" class="change-text">-</p>
       </article>
 
-      <article id="contextCard" class="card context-card" aria-labelledby="context-heading" hidden>
-        <p class="section-label">Assessment context</p>
-        <h2 id="context-heading">How this compares</h2>
-        <p id="citywideContextText" class="context-text"></p>
-        <p id="zipContextText" class="context-text"></p>
-      </article>
-
       <article class="card history-card" aria-labelledby="history-heading">
         <div class="card-header">
           <h2 id="history-heading">Assessment history</h2>
           <p>Official assessed values by tax year.</p>
         </div>
         <div id="assessmentHistoryChart" class="history-chart" aria-live="polite"></div>
+      </article>
+
+      <article id="contextCard" class="card context-card" aria-labelledby="context-heading" hidden>
+        <p class="section-label">Assessment context</p>
+        <h2 id="context-heading">How this compares</h2>
+        <p id="citywideContextText" class="context-text"></p>
+        <p id="zipContextText" class="context-text"></p>
       </article>
 
       <article class="card estimate-card" aria-labelledby="estimate-heading">
