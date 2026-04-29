@@ -5,6 +5,11 @@ const PROPERTY_LOOKUP_API_URL =
 
 let assessmentHistoryChart = null;
 
+let map = null;
+let marker = null;
+let assessmentHistoryChart = null;
+let latestAssessmentChart = null;
+
 function formatMoney(value) {
   const number = Number(value);
 
