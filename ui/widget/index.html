@@ -1,10 +1,13 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Property Assessment Viewer</title>
 
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
@@ -18,7 +21,7 @@
       </p>
     </header>
 
-    <section class="lookup-card" aria-label="Property lookup">
+    <section class="lookup-section" aria-label="Property lookup">
       <label for="opaIdInput">OPA ID or property ID</label>
       <div class="lookup-row">
         <input
@@ -46,62 +49,65 @@
     </section>
 
     <section id="resultPanel" class="result-panel" hidden>
-      <article class="card property-card" aria-labelledby="property-heading">
-        <p class="section-label">Property</p>
-        <h2 id="property-heading">-</h2>
-        <dl class="property-details">
-          <div>
-            <dt>OPA ID</dt>
-            <dd id="propertyIdText">-</dd>
+      <div class="result-grid">
+        <article class="card property-card grid-property" aria-labelledby="property-heading">
+          <p class="section-label">Property</p>
+          <h2 id="property-heading">-</h2>
+          <dl class="property-details">
+            <div>
+              <dt>OPA ID</dt>
+              <dd id="propertyIdText">-</dd>
+            </div>
+            <div>
+              <dt>Property type</dt>
+              <dd id="propertyTypeText">-</dd>
+            </div>
+          </dl>
+        </article>
+
+        <article class="card official-card grid-official" aria-labelledby="official-heading">
+          <p class="section-label">Official record</p>
+          <h2 id="official-heading">Current Official Assessed Value</h2>
+          <p id="officialValueText" class="official-value">-</p>
+          <p id="officialYearText" class="subtle-text">Tax Year -</p>
+          <p id="officialChangeText" class="change-text">-</p>
+        </article>
+
+        <article class="card history-card grid-history" aria-labelledby="history-heading">
+          <div class="card-header">
+            <h2 id="history-heading">Assessment history</h2>
+            <p>Official assessed values by tax year.</p>
           </div>
-          <div>
-            <dt>Property type</dt>
-            <dd id="propertyTypeText">-</dd>
+          <div id="assessmentHistoryChart" class="history-chart" aria-live="polite"></div>
+        </article>
+
+        <article id="contextCard" class="card context-card grid-context" aria-labelledby="context-heading" hidden>
+          <p class="section-label">Assessment context</p>
+          <h2 id="context-heading">How this compares</h2>
+          <div id="citywideContextRow" class="context-row" hidden>
+            <span class="context-label">Citywide percentile</span>
+            <strong id="citywideContextValue" class="context-value">-</strong>
+            <span class="context-helper">among Philadelphia residential parcels</span>
           </div>
-        </dl>
-      </article>
+          <div id="zipContextRow" class="context-row" hidden>
+            <span class="context-label">ZIP percentile</span>
+            <strong id="zipContextValue" class="context-value">-</strong>
+            <span id="zipContextHelper" class="context-helper"></span>
+          </div>
+        </article>
 
-      <article class="card official-card" aria-labelledby="official-heading">
-        <p class="section-label">Official record</p>
-        <h2 id="official-heading">Current Official Assessed Value</h2>
-        <p id="officialValueText" class="official-value">-</p>
-        <p id="officialYearText" class="subtle-text">Tax Year -</p>
-        <p id="officialChangeText" class="change-text">-</p>
-      </article>
-
-      <article class="card history-card" aria-labelledby="history-heading">
-        <div class="card-header">
-          <h2 id="history-heading">Assessment history</h2>
-          <p>Official assessed values by tax year.</p>
-        </div>
-        <div id="assessmentHistoryChart" class="history-chart" aria-live="polite"></div>
-      </article>
-
-      <article id="contextCard" class="card context-card" aria-labelledby="context-heading" hidden>
-        <p class="section-label">Assessment context</p>
-        <h2 id="context-heading">How this compares</h2>
-        <div id="citywideContextRow" class="context-row" hidden>
-          <span class="context-label">Citywide percentile</span>
-          <strong id="citywideContextValue" class="context-value">-</strong>
-          <span class="context-helper">among Philadelphia residential parcels</span>
-        </div>
-        <div id="zipContextRow" class="context-row" hidden>
-          <span class="context-label">ZIP percentile</span>
-          <strong id="zipContextValue" class="context-value">-</strong>
-          <span id="zipContextHelper" class="context-helper"></span>
-        </div>
-      </article>
-
-      <article class="card estimate-card" aria-labelledby="estimate-heading">
-        <p class="section-label">Informational estimate</p>
-        <h2 id="estimate-heading">Estimated Current Market Value</h2>
-        <p id="estimateValueText" class="estimate-value">-</p>
-        <p id="estimateGapText" class="subtle-text">-</p>
-        <p class="estimate-note">
-          This estimate is based on recent sales data and property characteristics.
-          It is not your official assessed value and does not affect your tax bill.
-        </p>
-      </article>
+        <article class="card estimate-card grid-estimate" aria-labelledby="estimate-heading">
+          <p class="section-label">Informational estimate</p>
+          <p class="purpose-label">For informational purposes only</p>
+          <h2 id="estimate-heading">Estimated Current Market Value</h2>
+          <p id="estimateValueText" class="estimate-value">-</p>
+          <p id="estimateGapText" class="subtle-text">-</p>
+          <p class="estimate-note">
+            This estimate is based on recent sales data and property characteristics.
+            It is not your official assessed value and does not affect your tax bill.
+          </p>
+        </article>
+      </div>
 
       <footer class="source-note">
         <p id="sourceNoteText">
