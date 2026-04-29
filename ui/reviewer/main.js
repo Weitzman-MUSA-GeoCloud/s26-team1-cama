@@ -9,7 +9,14 @@ const DEFAULT_TILE_LAYER = "property_tile_info";
 const MAIN_DISPLAY_MAX = 2500000;
 const MAIN_DISPLAY_BIN_SIZE = 100000;
 const VALUE_COLORS = ["#eff6ff", "#bfdbfe", "#93c5fd", "#60a5fa", "#2563eb", "#1e3a8a"];
-const GAP_COLORS = ["#53627f", "#8798b3", "#d8dee9", "#e2c48f", "#c98c4a", "#87552c"];
+const GAP_UNAVAILABLE_COLOR = "#d9dde5";
+const GAP_BINS = [
+  { max: -75, label: "&le; -75%", color: "#53627f" },
+  { min: -75, max: -25, label: "-75% to -25%", color: "#8798b3" },
+  { min: -25, max: 25, label: "-25% to +25%", color: "#d8dee9" },
+  { min: 25, max: 75, label: "+25% to +75%", color: "#c99a5c" },
+  { min: 75, label: "&gt; +75%", color: "#87552c" },
+];
 
 const map = L.map("map", {
   zoomControl: true,
@@ -47,7 +54,7 @@ const modes = {
     description: "Showing percent difference between model estimate and official value.",
     field: "gap_pct",
     metadataField: "percent_change",
-    colors: GAP_COLORS,
+    colors: GAP_BINS.map((bin) => bin.color),
   },
 };
 
@@ -103,6 +110,19 @@ function formatPercent(value) {
   }).format(number);
 }
 
+function formatGapPercent(value) {
+  const number = Number(value);
+
+  if (!Number.isFinite(number)) {
+    return "Gap unavailable";
+  }
+
+  return `${new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  }).format(number)}%`;
+}
+
 function setStatus(message = "") {
   document.getElementById("mapStatus").textContent = message;
 }
@@ -112,11 +132,15 @@ function getTilePropertyValue(properties, modeName = activeMode) {
     const official = Number(properties.tax_year_assessed_value);
     const estimate = Number(properties.current_assessed_value);
 
-    if (!Number.isFinite(official) || official === 0 || !Number.isFinite(estimate)) {
+    if (
+      !Number.isFinite(official) ||
+      official < 10000 ||
+      !Number.isFinite(estimate)
+    ) {
       return null;
     }
 
-    return (estimate - official) / official;
+    return ((estimate - official) / official) * 100;
   }
 
   return Number(properties[modes[modeName].field]);
@@ -139,6 +163,11 @@ function getColor(value, modeName = activeMode) {
   const mode = modes[modeName];
   const breakpoints = getBreakpoints(modeName);
 
+  if (modeName === "gap") {
+    const gapBin = getGapBin(number);
+    return gapBin ? gapBin.color : GAP_UNAVAILABLE_COLOR;
+  }
+
   if (!Number.isFinite(number)) {
     return "#cfd6df";
   }
@@ -157,11 +186,28 @@ function getColor(value, modeName = activeMode) {
   return mode.colors[Math.min(index, mode.colors.length - 1)];
 }
 
+function getGapBin(value) {
+  const number = Number(value);
+
+  if (!Number.isFinite(number)) {
+    return null;
+  }
+
+  return GAP_BINS.find((bin) => {
+    const aboveMin = bin.min === undefined || number > bin.min;
+    const belowMax = bin.max === undefined || number <= bin.max;
+    return aboveMin && belowMax;
+  });
+}
+
 function styleFeature(properties) {
+  const value = getTilePropertyValue(properties);
+  const gapUnavailable = activeMode === "gap" && !Number.isFinite(Number(value));
+
   return {
     fill: true,
-    fillColor: getColor(getTilePropertyValue(properties)),
-    fillOpacity: 0.72,
+    fillColor: getColor(value),
+    fillOpacity: gapUnavailable ? 0.25 : 0.72,
     color: "#ffffff",
     opacity: 0.35,
     weight: 0.45,
@@ -169,7 +215,7 @@ function styleFeature(properties) {
 }
 
 function formatModeValue(value, modeName = activeMode) {
-  return modeName === "gap" ? formatPercent(value) : formatMoney(value);
+  return modeName === "gap" ? formatGapPercent(value) : formatMoney(value);
 }
 
 function getTileConfig() {
@@ -196,20 +242,30 @@ function renderLegend() {
   }
 
   const legend = document.getElementById("mapLegend");
-  const labels = breakpoints.slice(0, mode.colors.length).map((breakpoint, index) => {
-    const next = breakpoints[index + 1];
-    const label =
-      next === undefined
-        ? `${formatModeValue(breakpoint)}+`
-        : `${formatModeValue(breakpoint)} to ${formatModeValue(next)}`;
+  const labels =
+    activeMode === "gap"
+      ? GAP_BINS.map(
+          (bin) => `
+            <div class="legend-row">
+              <span style="background:${bin.color}"></span>
+              <em>${bin.label}</em>
+            </div>
+          `,
+        )
+      : breakpoints.slice(0, mode.colors.length).map((breakpoint, index) => {
+          const next = breakpoints[index + 1];
+          const label =
+            next === undefined
+              ? `${formatModeValue(breakpoint)}+`
+              : `${formatModeValue(breakpoint)} to ${formatModeValue(next)}`;
 
-    return `
-      <div class="legend-row">
-        <span style="background:${mode.colors[index]}"></span>
-        <em>${label}</em>
-      </div>
-    `;
-  });
+          return `
+            <div class="legend-row">
+              <span style="background:${mode.colors[index]}"></span>
+              <em>${label}</em>
+            </div>
+          `;
+        });
 
   legend.innerHTML = `
     <strong>${mode.label}</strong>
@@ -285,7 +341,11 @@ function calculateGapValue(properties) {
   const official = Number(properties.tax_year_assessed_value);
   const estimate = Number(properties.current_assessed_value);
 
-  if (!Number.isFinite(official) || !Number.isFinite(estimate)) {
+  if (
+    !Number.isFinite(official) ||
+    official < 10000 ||
+    !Number.isFinite(estimate)
+  ) {
     return null;
   }
 
@@ -296,11 +356,11 @@ function calculateGapPercent(properties) {
   const official = Number(properties.tax_year_assessed_value);
   const gap = calculateGapValue(properties);
 
-  if (!Number.isFinite(official) || official === 0 || !Number.isFinite(gap)) {
+  if (!Number.isFinite(official) || official < 10000 || !Number.isFinite(gap)) {
     return null;
   }
 
-  return gap / official;
+  return (gap / official) * 100;
 }
 
 function renderSelectedProperty(properties) {
@@ -317,7 +377,7 @@ function renderSelectedProperty(properties) {
     properties.current_assessed_value,
   );
   document.getElementById("selectedGapValue").textContent =
-    `${formatMoney(calculateGapValue(properties))} (${formatPercent(calculateGapPercent(properties))})`;
+    `${formatMoney(calculateGapValue(properties))} (${formatGapPercent(calculateGapPercent(properties))})`;
 }
 
 function clearSelection() {
