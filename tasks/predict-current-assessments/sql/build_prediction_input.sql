@@ -6,7 +6,6 @@ SELECT
     SAFE_CAST(taxable_land AS FLOAT64) AS taxable_land,
     quality_grade,
     SAFE_CAST(garage_spaces AS FLOAT64) AS garage_spaces,
-    EXTRACT(YEAR FROM SAFE.PARSE_DATE('%Y-%m-%d', assessment_date)) AS assessment_year,
     SAFE_CAST(year_built AS INT64) AS year_built_int,
     CASE
         WHEN SAFE_CAST(interior_condition AS INT64) IS NOT NULL
