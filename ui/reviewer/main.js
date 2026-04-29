@@ -207,6 +207,20 @@ function getTilePropertyValue(properties, modeName = activeMode) {
   return Number(properties[modes[modeName].field]);
 }
 
+function normalizeBinRows(rows) {
+  return rows
+    .map((row) => ({
+      lowerBound: Number(row.lower_bound),
+      upperBound: row.upper_bound === null ? null : Number(row.upper_bound),
+      propertyCount: Number(row.property_count),
+    }))
+    .filter(
+      (row) =>
+        Number.isFinite(row.lowerBound) && Number.isFinite(row.propertyCount),
+    )
+    .sort((left, right) => left.lowerBound - right.lowerBound);
+}
+
 function computeWeightedQuantileBreaksFromBins(bins, classCount = 7) {
   const rows = normalizeBinRows(bins).filter((row) => row.propertyCount > 0);
   const total = rows.reduce((sum, row) => sum + row.propertyCount, 0);
@@ -251,10 +265,6 @@ function computeWeightedQuantileBreaksFromBins(bins, classCount = 7) {
 
     return Math.max(value, breaks[index - 1] + 1);
   });
-}
-
-function getChoroplethBins(modeName = activeMode) {
-  return getRowsForBreaks(modeName, activeGeography);
 }
 
 function getRowsForBreaks(modeName, geography) {
@@ -366,9 +376,9 @@ function styleFeature(properties) {
   if (outsideSelectedZip) {
     return {
       fill: true,
-      fillColor: "#ffffff",
+      fillColor: "#fff",
       fillOpacity: 0,
-      color: "#ffffff",
+      color: "#fff",
       opacity: 0,
       weight: 0,
     };
@@ -378,7 +388,7 @@ function styleFeature(properties) {
     fill: true,
     fillColor: getColor(value),
     fillOpacity: gapUnavailable ? 0.2 : 0.72,
-    color: "#ffffff",
+    color: "#fff",
     opacity: 0.35,
     weight: 0.45,
   };
@@ -473,116 +483,33 @@ function renderLegend() {
   const labels =
     activeMode === "gap"
       ? GAP_BINS.map(
-          (bin) => `
+        (bin) => `
             <div class="legend-row">
               <span style="background:${bin.color}"></span>
               <em>${bin.label}</em>
             </div>
           `,
-        )
+      )
       : mode.colors.map((color, index) => {
-          const lower = activeValueBreaks[index];
-          const upper = activeValueBreaks[index + 1];
-          const label =
-            index === mode.colors.length - 1
-              ? `${formatModeValue(lower)}+`
-              : `${formatModeValue(lower)} to ${formatModeValue(upper)}`;
+        const lower = activeValueBreaks[index];
+        const upper = activeValueBreaks[index + 1];
+        const label =
+          index === mode.colors.length - 1
+            ? `${formatModeValue(lower)}+`
+            : `${formatModeValue(lower)} to ${formatModeValue(upper)}`;
 
-          return `
+        return `
             <div class="legend-row">
               <span style="background:${color}"></span>
               <em>${label}</em>
             </div>
           `;
-        });
+      });
 
   legend.innerHTML = `
     <strong>${mode.label}</strong>
     ${labels.join("")}
   `;
-}
-
-function renderTileLayer() {
-  const tileConfig = getTileConfig();
-
-  if (propertyTileLayer) {
-    map.removeLayer(propertyTileLayer);
-  }
-
-  propertyTileLayer = L.vectorGrid.protobuf(tileConfig.url, {
-    rendererFactory: L.canvas.tile,
-    interactive: true,
-    minZoom: tileConfig.minzoom,
-    maxZoom: tileConfig.maxzoom,
-    maxNativeZoom: tileConfig.maxzoom,
-    vectorTileLayerStyles: {
-      [tileConfig.sourceLayer]: styleFeature,
-    },
-  });
-
-  propertyTileLayer.on("mouseover", (event) => {
-    const properties = event.layer.properties;
-
-    if (selectedZip && getFeatureZip(properties) !== selectedZip) {
-      return;
-    }
-
-    const value = getTilePropertyValue(properties);
-    const featureZip = getFeatureZip(properties);
-    const gapLine =
-      activeMode === "gap"
-        ? `<br>Gap: ${Number.isFinite(Number(value)) ? formatGapPercent(value) : "unavailable"}`
-        : "";
-
-    hoverPopup = L.popup({
-      closeButton: false,
-      autoPan: false,
-      className: "hover-popup",
-    })
-      .setLatLng(event.latlng)
-      .setContent(`
-        <strong>${properties.address || "Address not available"}</strong><br>
-        ZIP: ${featureZip || "N/A"}<br>
-        Official: ${formatMoney(properties.tax_year_assessed_value)}<br>
-        Estimate: ${formatMoney(properties.current_assessed_value)}${gapLine}
-      `)
-      .openOn(map);
-  });
-
-  propertyTileLayer.on("mouseout", () => {
-    if (hoverPopup) {
-      map.closePopup(hoverPopup);
-      hoverPopup = null;
-    }
-  });
-
-  propertyTileLayer.on("click", (event) => {
-    const properties = event.layer.properties;
-
-    if (selectedZip && getFeatureZip(properties) !== selectedZip) {
-      setStatus(`That property is outside ZIP ${activeGeography}.`);
-      return;
-    }
-
-    renderSelectedProperty(properties);
-  });
-
-  propertyTileLayer.addTo(map);
-  renderLegend();
-}
-
-function normalizeBinRows(rows) {
-  return rows
-    .map((row) => ({
-      lowerBound: Number(row.lower_bound),
-      upperBound: row.upper_bound === null ? null : Number(row.upper_bound),
-      propertyCount: Number(row.property_count),
-    }))
-    .filter(
-      (row) =>
-        Number.isFinite(row.lowerBound) && Number.isFinite(row.propertyCount),
-    )
-    .sort((left, right) => left.lowerBound - right.lowerBound);
 }
 
 function buildDisplayBins(rows) {
@@ -711,18 +638,18 @@ function renderDistributionChart(chartElementId, rows, chartRef, selectedValue) 
     annotations: {
       xaxis: markerCategory
         ? [
-            {
-              x: markerCategory,
-              borderColor: "#0f2438",
-              label: {
-                text: "Selected",
-                style: {
-                  background: "#0f2438",
-                  color: "#ffffff",
-                },
+          {
+            x: markerCategory,
+            borderColor: "#0f2438",
+            label: {
+              text: "Selected",
+              style: {
+                background: "#0f2438",
+                color: "#fff",
               },
             },
-          ]
+          },
+        ]
         : [],
     },
     series: [
@@ -815,62 +742,6 @@ function updateCharts() {
     `${area.label}; values above $2.5M are grouped.`;
   document.getElementById("modelChartHelper").textContent =
     `${area.label}; values above $2.5M are grouped.`;
-}
-
-function updateGeographyControls() {
-  const geoTabCitywide = document.getElementById("geoTabCitywide");
-  const geoTabZip = document.getElementById("geoTabZip");
-  const zipInputRow = document.getElementById("zipInputRow");
-
-  if (!geoTabCitywide || !geoTabZip || !zipInputRow) {
-    return;
-  }
-
-  const isCitywide = activeGeography === "citywide";
-  geoTabCitywide.classList.toggle("active", isCitywide);
-  geoTabZip.classList.toggle("active", !isCitywide);
-  geoTabZip.textContent = isCitywide
-    ? "By ZIP Code"
-    : `By ZIP Code ${activeGeography}`;
-  zipInputRow.hidden = isCitywide;
-}
-
-function handleGeographyChange(nextGeography) {
-  const normalizedGeography =
-    nextGeography === "citywide" ? "citywide" : normalizeZip(nextGeography);
-  const previousGeography = activeGeography;
-  activeGeography = normalizedGeography;
-  updateActiveStyleState();
-  updateGeographyControls();
-
-  if (
-    selectedProperties &&
-    selectedZip &&
-    getFeatureZip(selectedProperties) !== selectedZip
-  ) {
-    clearSelection();
-  }
-
-  if (selectedZip && previousGeography !== activeGeography) {
-    focusSelectedZip(selectedZip);
-  }
-
-  updateSummary();
-  updateCharts();
-  renderTileLayer();
-}
-
-function renderModeControls() {
-  document.querySelectorAll(".mode-button").forEach((button) => {
-    button.classList.toggle("active", button.dataset.mode === activeMode);
-  });
-  updateActiveStyleState();
-  updateSummary();
-  renderLegend();
-
-  if (propertyTileLayer) {
-    renderTileLayer();
-  }
 }
 
 function getGapClass(value) {
@@ -977,6 +848,19 @@ function renderSelectedHistory(history) {
   selectedHistoryChart.render();
 }
 
+function renderSelectedPercentiles() {
+  const citywide = selectedLookupPayload?.context?.citywide || {};
+  const zip = selectedLookupPayload?.context?.zip || {};
+
+  document.getElementById("selectedOfficialCitywidePercentile").textContent =
+    formatPercentile(citywide.official_percentile);
+  document.getElementById("selectedOfficialZipPercentile").textContent =
+    formatPercentile(zip.official_percentile);
+  document.getElementById("selectedModelCitywidePercentile").textContent =
+    formatPercentile(citywide.model_percentile);
+  document.getElementById("selectedModelZipPercentile").textContent =
+    formatPercentile(zip.model_percentile);
+}
 async function loadSelectedLookup(propertyId) {
   try {
     const url = new URL(PROPERTY_LOOKUP_API_URL, window.location.origin);
@@ -992,25 +876,11 @@ async function loadSelectedLookup(propertyId) {
     selectedLookupPayload = payload;
     renderSelectedPercentiles();
     renderSelectedHistory(payload.history || []);
-  } catch (error) {
+  } catch {
     selectedLookupPayload = null;
     renderSelectedPercentiles();
     renderSelectedHistory([]);
   }
-}
-
-function renderSelectedPercentiles() {
-  const citywide = selectedLookupPayload?.context?.citywide || {};
-  const zip = selectedLookupPayload?.context?.zip || {};
-
-  document.getElementById("selectedOfficialCitywidePercentile").textContent =
-    formatPercentile(citywide.official_percentile);
-  document.getElementById("selectedOfficialZipPercentile").textContent =
-    formatPercentile(zip.official_percentile);
-  document.getElementById("selectedModelCitywidePercentile").textContent =
-    formatPercentile(citywide.model_percentile);
-  document.getElementById("selectedModelZipPercentile").textContent =
-    formatPercentile(zip.model_percentile);
 }
 
 function renderSelectedProperty(properties) {
@@ -1020,7 +890,7 @@ function renderSelectedProperty(properties) {
   document.getElementById("selectedPanel").hidden = false;
   document.getElementById("selectedAddress").textContent =
     properties.address || "Address not available";
-  document.getElementById("selectedPropertyId").textContent =
+  document.getElementById("selected-property-id").textContent =
     properties.property_id || "N/A";
   document.getElementById("selectedOfficialValue").textContent = formatMoney(
     properties.tax_year_assessed_value,
@@ -1029,7 +899,7 @@ function renderSelectedProperty(properties) {
     properties.current_assessed_value,
   );
   const gapPercent = calculateGapPercent(properties);
-  const selectedGapElement = document.getElementById("selectedGapValue");
+  const selectedGapElement = document.getElementById("selected-gap-value");
   selectedGapElement.className = getGapClass(gapPercent);
   selectedGapElement.textContent =
     `${formatMoney(calculateGapValue(properties))} (${formatGapPercent(gapPercent)})`;
@@ -1050,6 +920,130 @@ function clearSelection() {
   updateCharts();
 }
 
+function renderTileLayer() {
+  const tileConfig = getTileConfig();
+
+  if (propertyTileLayer) {
+    map.removeLayer(propertyTileLayer);
+  }
+
+  propertyTileLayer = L.vectorGrid.protobuf(tileConfig.url, {
+    rendererFactory: L.canvas.tile,
+    interactive: true,
+    minZoom: tileConfig.minzoom,
+    maxZoom: tileConfig.maxzoom,
+    maxNativeZoom: tileConfig.maxzoom,
+    vectorTileLayerStyles: {
+      [tileConfig.sourceLayer]: styleFeature,
+    },
+  });
+
+  propertyTileLayer.on("mouseover", (event) => {
+    const properties = event.layer.properties;
+
+    if (selectedZip && getFeatureZip(properties) !== selectedZip) {
+      return;
+    }
+
+    const value = getTilePropertyValue(properties);
+    const featureZip = getFeatureZip(properties);
+    const gapLine =
+      activeMode === "gap"
+        ? `<br>Gap: ${Number.isFinite(Number(value)) ? formatGapPercent(value) : "unavailable"}`
+        : "";
+
+    hoverPopup = L.popup({
+      closeButton: false,
+      autoPan: false,
+      className: "hover-popup",
+    })
+      .setLatLng(event.latlng)
+      .setContent(`
+        <strong>${properties.address || "Address not available"}</strong><br>
+        ZIP: ${featureZip || "N/A"}<br>
+        Official: ${formatMoney(properties.tax_year_assessed_value)}<br>
+        Estimate: ${formatMoney(properties.current_assessed_value)}${gapLine}
+      `)
+      .openOn(map);
+  });
+
+  propertyTileLayer.on("mouseout", () => {
+    if (hoverPopup) {
+      map.closePopup(hoverPopup);
+      hoverPopup = null;
+    }
+  });
+
+  propertyTileLayer.on("click", (event) => {
+    const properties = event.layer.properties;
+
+    if (selectedZip && getFeatureZip(properties) !== selectedZip) {
+      setStatus(`That property is outside ZIP ${activeGeography}.`);
+      return;
+    }
+
+    renderSelectedProperty(properties);
+  });
+
+  propertyTileLayer.addTo(map);
+  renderLegend();
+}
+
+function updateGeographyControls() {
+  const geoTabCitywide = document.getElementById("geoTabCitywide");
+  const geoTabZip = document.getElementById("geoTabZip");
+  const zipInputRow = document.getElementById("zipInputRow");
+
+  if (!geoTabCitywide || !geoTabZip || !zipInputRow) {
+    return;
+  }
+
+  const isCitywide = activeGeography === "citywide";
+  geoTabCitywide.classList.toggle("active", isCitywide);
+  geoTabZip.classList.toggle("active", !isCitywide);
+  geoTabZip.textContent = isCitywide
+    ? "By ZIP Code"
+    : `By ZIP Code ${activeGeography}`;
+  zipInputRow.hidden = isCitywide;
+}
+
+function handleGeographyChange(nextGeography) {
+  const normalizedGeography =
+    nextGeography === "citywide" ? "citywide" : normalizeZip(nextGeography);
+  const previousGeography = activeGeography;
+  activeGeography = normalizedGeography;
+  updateActiveStyleState();
+  updateGeographyControls();
+
+  if (
+    selectedProperties &&
+    selectedZip &&
+    getFeatureZip(selectedProperties) !== selectedZip
+  ) {
+    clearSelection();
+  }
+
+  if (selectedZip && previousGeography !== activeGeography) {
+    focusSelectedZip(selectedZip);
+  }
+
+  updateSummary();
+  updateCharts();
+  renderTileLayer();
+}
+
+function renderModeControls() {
+  document.querySelectorAll(".mode-button").forEach((button) => {
+    button.classList.toggle("active", button.dataset.mode === activeMode);
+  });
+  updateActiveStyleState();
+  updateSummary();
+  renderLegend();
+
+  if (propertyTileLayer) {
+    renderTileLayer();
+  }
+}
 async function loadDistributionInputs() {
   const [officialResponse, modelResponse] = await Promise.all([
     fetch(TAX_YEAR_ASSESSMENT_BINS_URL),
@@ -1114,7 +1108,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const geoTabCitywide = document.getElementById("geoTabCitywide");
   const geoTabZip = document.getElementById("geoTabZip");
   const zipInputRow = document.getElementById("zipInputRow");
-  const zipCodeInput = document.getElementById("zipCodeInput");
+  const zipCodeInput = document.getElementById("zip-code-input");
   const zipApplyBtn = document.getElementById("zipApplyBtn");
 
   document.querySelectorAll(".mode-button").forEach((button) => {

@@ -253,7 +253,7 @@ function renderProperty(payload) {
 
   document.getElementById("property-heading").textContent =
     property.address || "Address not available";
-  document.getElementById("propertyIdText").textContent =
+  document.getElementById("property-id-text").textContent =
     property.property_id || "Not available";
   document.getElementById("propertyTypeText").textContent =
     property.property_type || "Not available";
