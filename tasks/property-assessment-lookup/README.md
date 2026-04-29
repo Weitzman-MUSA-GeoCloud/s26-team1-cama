@@ -24,6 +24,7 @@ It also handles `OPTIONS` requests for browser CORS preflight.
   "ok": true,
   "property": {
     "property_id": "502244720",
+    "zip_code": "19104",
     "address": "1234 MAIN ST",
     "property_type": "SINGLE FAMILY"
   },
@@ -43,6 +44,18 @@ It also handles `OPTIONS` requests for browser CORS preflight.
     "predicted_at": "2026-04-29T03:16:30Z",
     "gap_value": 13500,
     "gap_pct": 0.072
+  },
+  "context": {
+    "citywide": {
+      "official_percentile": 63.2,
+      "model_percentile": 68.5
+    },
+    "zip": {
+      "zip_code": "19104",
+      "label": "ZIP 19104",
+      "official_percentile": 55.4,
+      "model_percentile": 61.1
+    }
   }
 }
 ```

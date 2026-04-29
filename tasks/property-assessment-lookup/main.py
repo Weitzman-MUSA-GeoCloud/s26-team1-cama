@@ -47,6 +47,7 @@ def property_assessment_lookup(request):
         SELECT
             property_id,
             parcel_number,
+            zip_code,
             location AS address,
             category_code_description AS property_type
         FROM `{project_id}.{core_dataset}.opa_properties`
@@ -70,6 +71,82 @@ def property_assessment_lookup(request):
             AND SAFE_CAST(assessments.market_value AS FLOAT64) IS NOT NULL
     ),
 
+    latest_assessments AS (
+        SELECT
+            assessments.property_id,
+            MAX(SAFE_CAST(assessments.market_value AS FLOAT64))
+                AS tax_year_assessed_value
+        FROM `{project_id}.{core_dataset}.opa_assessments` AS assessments
+        WHERE SAFE_CAST(assessments.year AS INT64) = (
+            SELECT MAX(SAFE_CAST(year AS INT64))
+            FROM `{project_id}.{core_dataset}.opa_assessments`
+            WHERE SAFE_CAST(year AS INT64) IS NOT NULL
+        )
+        GROUP BY assessments.property_id
+    ),
+
+    current_predictions AS (
+        SELECT
+            property_id,
+            SAFE_CAST(predicted_value AS FLOAT64) AS current_assessed_value,
+            predicted_at
+        FROM `{project_id}.{derived_dataset}.current_assessments`
+        QUALIFY ROW_NUMBER() OVER (
+            PARTITION BY property_id
+            ORDER BY predicted_at DESC
+        ) = 1
+    ),
+
+    property_values AS (
+        SELECT
+            properties.property_id,
+            properties.zip_code,
+            latest_assessments.tax_year_assessed_value,
+            current_predictions.current_assessed_value
+        FROM `{project_id}.{core_dataset}.opa_properties` AS properties
+        LEFT JOIN latest_assessments
+            ON properties.property_id = latest_assessments.property_id
+        LEFT JOIN current_predictions
+            ON properties.property_id = current_predictions.property_id
+        WHERE properties.category_code_description IN (
+            'SINGLE FAMILY',
+            'MULTI FAMILY',
+            'APARTMENTS > 4 UNITS',
+            'VACANT LAND - RESIDENTIAL',
+            'GARAGE - RESIDENTIAL'
+        )
+    ),
+
+    official_percentiles AS (
+        SELECT
+            property_id,
+            zip_code,
+            CUME_DIST() OVER (
+                ORDER BY tax_year_assessed_value
+            ) * 100 AS official_citywide_percentile,
+            CUME_DIST() OVER (
+                PARTITION BY zip_code
+                ORDER BY tax_year_assessed_value
+            ) * 100 AS official_zip_percentile
+        FROM property_values
+        WHERE tax_year_assessed_value IS NOT NULL
+    ),
+
+    model_percentiles AS (
+        SELECT
+            property_id,
+            zip_code,
+            CUME_DIST() OVER (
+                ORDER BY current_assessed_value
+            ) * 100 AS model_citywide_percentile,
+            CUME_DIST() OVER (
+                PARTITION BY zip_code
+                ORDER BY current_assessed_value
+            ) * 100 AS model_zip_percentile
+        FROM property_values
+        WHERE current_assessed_value IS NOT NULL
+    ),
+
     ranked_history AS (
         SELECT
             property_id,
@@ -84,21 +161,18 @@ def property_assessment_lookup(request):
 
     latest_estimate AS (
         SELECT
-            estimates.property_id,
-            SAFE_CAST(estimates.predicted_value AS FLOAT64)
+            current_predictions.property_id,
+            current_predictions.current_assessed_value
                 AS estimated_current_market_value,
-            estimates.predicted_at
-        FROM `{project_id}.{derived_dataset}.current_assessments` AS estimates
+            current_predictions.predicted_at
+        FROM current_predictions
         INNER JOIN property
-            ON estimates.property_id = property.property_id
-        QUALIFY ROW_NUMBER() OVER (
-            PARTITION BY estimates.property_id
-            ORDER BY estimates.predicted_at DESC
-        ) = 1
+            ON current_predictions.property_id = property.property_id
     )
 
     SELECT
         property.property_id,
+        property.zip_code,
         property.address,
         property.property_type,
         latest.tax_year AS latest_tax_year,
@@ -113,7 +187,11 @@ def property_assessment_lookup(request):
             ORDER BY tax_year
         ) AS history,
         latest_estimate.estimated_current_market_value,
-        latest_estimate.predicted_at
+        latest_estimate.predicted_at,
+        official_percentiles.official_citywide_percentile,
+        official_percentiles.official_zip_percentile,
+        model_percentiles.model_citywide_percentile,
+        model_percentiles.model_zip_percentile
     FROM property
     LEFT JOIN ranked_history AS latest
         ON property.property_id = latest.property_id
@@ -123,6 +201,10 @@ def property_assessment_lookup(request):
         AND prior.recency_rank = 2
     LEFT JOIN latest_estimate
         ON property.property_id = latest_estimate.property_id
+    LEFT JOIN official_percentiles
+        ON property.property_id = official_percentiles.property_id
+    LEFT JOIN model_percentiles
+        ON property.property_id = model_percentiles.property_id
     """
 
     try:
@@ -165,6 +247,7 @@ def property_assessment_lookup(request):
             "ok": True,
             "property": {
                 "property_id": row.property_id,
+                "zip_code": row.zip_code,
                 "address": row.address,
                 "property_type": row.property_type,
             },
@@ -188,7 +271,22 @@ def property_assessment_lookup(request):
                 "gap_value": gap_value,
                 "gap_pct": gap_pct,
             },
+            "context": {
+                "citywide": {
+                    "official_percentile": row.official_citywide_percentile,
+                    "model_percentile": row.model_citywide_percentile,
+                },
+                "zip": None,
+            },
         }
+
+        if row.zip_code:
+            response["context"]["zip"] = {
+                "zip_code": row.zip_code,
+                "label": f"ZIP {row.zip_code}",
+                "official_percentile": row.official_zip_percentile,
+                "model_percentile": row.model_zip_percentile,
+            }
 
         return (
             json.dumps(response),

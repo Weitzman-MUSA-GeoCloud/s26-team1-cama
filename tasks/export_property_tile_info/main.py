@@ -66,9 +66,23 @@ def export_property_tile_info(request):
     SELECT
         parcels.property_id,
         properties.location AS address,
+        properties.zip_code,
         ST_ASGEOJSON(parcels.geog) AS geometry,
         current_predictions.current_assessed_value,
-        latest_assessments.tax_year_assessed_value
+        latest_assessments.tax_year_assessed_value,
+        current_predictions.current_assessed_value
+            - latest_assessments.tax_year_assessed_value AS gap_value,
+        CASE
+            WHEN latest_assessments.tax_year_assessed_value IS NULL
+                OR latest_assessments.tax_year_assessed_value < 10000
+                THEN NULL
+            ELSE
+                SAFE_DIVIDE(
+                    current_predictions.current_assessed_value
+                    - latest_assessments.tax_year_assessed_value,
+                    latest_assessments.tax_year_assessed_value
+                ) * 100
+        END AS gap_pct
     FROM `{project_id}.{core_dataset}.pwd_parcels` AS parcels
     LEFT JOIN `{project_id}.{core_dataset}.opa_properties` AS properties
         ON parcels.property_id = properties.property_id
@@ -102,8 +116,11 @@ def export_property_tile_info(request):
                     "properties": {
                         "property_id": row.property_id,
                         "address": row.address,
+                        "zip_code": row.zip_code,
                         "current_assessed_value": row.current_assessed_value,
                         "tax_year_assessed_value": row.tax_year_assessed_value,
+                        "gap_value": row.gap_value,
+                        "gap_pct": row.gap_pct,
                     },
                 }
             )

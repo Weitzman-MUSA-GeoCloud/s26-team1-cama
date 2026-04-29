@@ -20,6 +20,7 @@ main:
           - export_current_assessment_bins_url: "https://export-current-assessment-bins-bl43esqwsa-uk.a.run.app"
           - export_property_tile_info_url: "https://export-property-tile-info-bl43esqwsa-uk.a.run.app"
           - export_map_style_metadata_url: "https://export-map-style-metadata-bl43esqwsa-uk.a.run.app"
+          - export_zip_assessment_context_url: "https://export-zip-assessment-context-bl43esqwsa-uk.a.run.app"
           - predict_current_assessments_job: "predict-current-assessments"
           - generate_property_map_tiles_job: "generate-property-map-tiles"
           - opa_properties_extract_result: null
@@ -39,6 +40,7 @@ main:
           - export_current_assessment_bins_result: null
           - export_property_tile_info_result: null
           - export_map_style_metadata_result: null
+          - export_zip_assessment_context_result: null
           - generate_property_map_tiles_result: null
 
     - run_ingest_pipelines:
@@ -178,6 +180,7 @@ main:
             - export_current_assessment_bins_result
             - export_property_tile_info_result
             - export_map_style_metadata_result
+            - export_zip_assessment_context_result
             - generate_property_map_tiles_result
           branches:
             - tax_year_chart:
@@ -257,6 +260,18 @@ main:
                         body: {}
                       result: export_map_style_metadata_result
 
+            - zip_assessment_context:
+                steps:
+                  - export_zip_assessment_context:
+                      call: http.post
+                      args:
+                        url: ${export_zip_assessment_context_url}
+                        auth:
+                          type: OIDC
+                        timeout: 1800
+                        body: {}
+                      result: export_zip_assessment_context_result
+
     - done:
         return:
           ingest:
@@ -283,5 +298,6 @@ main:
             current_assessment_bins: ${export_current_assessment_bins_result.body}
             property_tile_info: ${export_property_tile_info_result.body}
             map_style_metadata: ${export_map_style_metadata_result.body}
+            zip_assessment_context: ${export_zip_assessment_context_result.body}
           jobs:
             generate_property_map_tiles: ${generate_property_map_tiles_result}

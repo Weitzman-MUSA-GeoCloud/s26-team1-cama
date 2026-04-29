@@ -16,10 +16,18 @@
           <p class="eyebrow">Philadelphia CAMA</p>
           <h1>Reviewer Dashboard</h1>
         </div>
-        <div class="mode-toggle" aria-label="Map value mode">
-          <button type="button" class="mode-button active" data-mode="official">Official Value</button>
-          <button type="button" class="mode-button" data-mode="estimate">Model Estimate</button>
-          <button type="button" class="mode-button" data-mode="gap">Gap (%)</button>
+        <div class="toolbar-controls">
+          <label class="geography-control" for="geographySelect">
+            Geography
+            <select id="geographySelect">
+              <option value="citywide">Citywide</option>
+            </select>
+          </label>
+          <div class="mode-toggle" aria-label="Map value mode">
+            <button type="button" class="mode-button active" data-mode="official">Official Value</button>
+            <button type="button" class="mode-button" data-mode="estimate">Model Estimate</button>
+            <button type="button" class="mode-button" data-mode="gap">Gap (%)</button>
+          </div>
         </div>
       </div>
       <div id="map"></div>
@@ -38,12 +46,24 @@
 
         <dl id="citywideSummary" class="summary-grid">
           <div>
-            <dt>Records in map asset</dt>
+            <dt>Geography</dt>
+            <dd id="geographyText">Citywide</dd>
+          </div>
+          <div>
+            <dt>Records</dt>
             <dd id="recordCountText">-</dd>
           </div>
           <div>
-            <dt>Default field</dt>
-            <dd id="defaultFieldText">-</dd>
+            <dt>Median official</dt>
+            <dd id="medianOfficialText">-</dd>
+          </div>
+          <div>
+            <dt>Median model</dt>
+            <dd id="medianModelText">-</dd>
+          </div>
+          <div>
+            <dt>Map mode</dt>
+            <dd id="mapModeText">Official Value</dd>
           </div>
         </dl>
 
@@ -83,10 +103,31 @@
             <dt>Gap</dt>
             <dd id="selectedGapValue">-</dd>
           </div>
+          <div>
+            <dt>Official percentile citywide</dt>
+            <dd id="selectedOfficialCitywidePercentile">-</dd>
+          </div>
+          <div>
+            <dt>Official percentile in ZIP</dt>
+            <dd id="selectedOfficialZipPercentile">-</dd>
+          </div>
+          <div>
+            <dt>Model percentile citywide</dt>
+            <dd id="selectedModelCitywidePercentile">-</dd>
+          </div>
+          <div>
+            <dt>Model percentile in ZIP</dt>
+            <dd id="selectedModelZipPercentile">-</dd>
+          </div>
         </dl>
         <p class="sidebar-copy">
           The map shows one value dimension at a time. Official values and model estimates are separated so reviewers can compare them deliberately.
         </p>
+        <div class="chart-card">
+          <h3>Assessment history</h3>
+          <p id="selectedHistoryHelper" class="helper-text">Loading assessment history...</p>
+          <div id="selectedHistoryChart" class="mini-chart"></div>
+        </div>
       </section>
     </aside>
   </main>

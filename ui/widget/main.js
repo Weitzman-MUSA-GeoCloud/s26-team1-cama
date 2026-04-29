@@ -47,6 +47,22 @@ function formatPercent(value) {
   }).format(number);
 }
 
+function formatPercentile(value) {
+  const number = Number(value);
+
+  if (!Number.isFinite(number)) {
+    return null;
+  }
+
+  const rounded = Math.round(number);
+  const suffix =
+    rounded % 100 >= 11 && rounded % 100 <= 13
+      ? "th"
+      : { 1: "st", 2: "nd", 3: "rd" }[rounded % 10] || "th";
+
+  return `${rounded}${suffix}`;
+}
+
 function setLookupMessage(message = "", type = "neutral") {
   const messageElement = document.getElementById("lookupMessage");
   messageElement.textContent = message;
@@ -208,6 +224,13 @@ function renderProperty(payload) {
   const property = payload.property || {};
   const official = payload.official || {};
   const estimate = payload.estimate || {};
+  const context = payload.context || {};
+  const citywideOfficialPercentile = formatPercentile(
+    context.citywide?.official_percentile,
+  );
+  const zipOfficialPercentile = formatPercentile(
+    context.zip?.official_percentile,
+  );
 
   document.getElementById("property-heading").textContent =
     property.address || "Address not available";
@@ -225,6 +248,17 @@ function renderProperty(payload) {
       : "Tax Year not available";
   document.getElementById("officialChangeText").textContent =
     formatOfficialChange(official);
+
+  document.getElementById("contextCard").hidden =
+    !citywideOfficialPercentile && !zipOfficialPercentile;
+  document.getElementById("citywideContextText").textContent =
+    citywideOfficialPercentile
+      ? `This official assessed value is around the ${citywideOfficialPercentile} percentile citywide.`
+      : "Citywide context is unavailable.";
+  document.getElementById("zipContextText").textContent =
+    zipOfficialPercentile && context.zip
+      ? `Around the ${zipOfficialPercentile} percentile among residential parcels in ${context.zip.label}.`
+      : "";
 
   document.getElementById("estimateValueText").textContent = formatMoney(
     estimate.estimated_current_market_value,

@@ -214,6 +214,16 @@ body {
   line-height: 1.45;
 }
 
+.context-card {
+  background: #fbfcfd;
+}
+
+.context-text {
+  margin: 8px 0 0;
+  color: var(--text);
+  line-height: 1.45;
+}
+
 .card-header {
   margin-bottom: 12px;
 }
