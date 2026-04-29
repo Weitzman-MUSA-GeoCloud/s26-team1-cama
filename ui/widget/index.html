@@ -80,8 +80,16 @@
       <article id="contextCard" class="card context-card" aria-labelledby="context-heading" hidden>
         <p class="section-label">Assessment context</p>
         <h2 id="context-heading">How this compares</h2>
-        <p id="citywideContextText" class="context-text"></p>
-        <p id="zipContextText" class="context-text"></p>
+        <div id="citywideContextRow" class="context-row" hidden>
+          <span class="context-label">Citywide percentile</span>
+          <strong id="citywideContextValue" class="context-value">-</strong>
+          <span class="context-helper">among Philadelphia residential parcels</span>
+        </div>
+        <div id="zipContextRow" class="context-row" hidden>
+          <span class="context-label">ZIP percentile</span>
+          <strong id="zipContextValue" class="context-value">-</strong>
+          <span id="zipContextHelper" class="context-helper"></span>
+        </div>
       </article>
 
       <article class="card estimate-card" aria-labelledby="estimate-heading">

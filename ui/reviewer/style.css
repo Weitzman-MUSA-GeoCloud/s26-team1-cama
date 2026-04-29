@@ -154,21 +154,6 @@ h3 {
   display: none;
 }
 
-.zip-zoom-message {
-  position: absolute;
-  top: 84px;
-  left: 28px;
-  z-index: 500;
-  margin: 0;
-  padding: 8px 10px;
-  border: 1px solid #c8d7e6;
-  border-radius: 6px;
-  background: rgb(248 251 255 / 94%);
-  color: var(--accent);
-  font-size: 0.9rem;
-  font-weight: 700;
-}
-
 .sidebar {
   overflow-y: auto;
   border-left: 1px solid var(--border);

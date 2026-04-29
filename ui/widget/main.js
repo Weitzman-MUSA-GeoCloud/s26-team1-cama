@@ -162,7 +162,7 @@ function renderHistoryChart(history) {
 
   assessmentHistoryChart = new window.ApexCharts(chartElement, {
     chart: {
-      type: "bar",
+      type: "line",
       height: 300,
       width: "100%",
       parentHeightOffset: 0,
@@ -177,9 +177,12 @@ function renderHistoryChart(history) {
       },
     ],
     colors: ["#1f5f99"],
-    fill: {
-      type: "solid",
-      opacity: 1,
+    stroke: {
+      width: 3,
+      curve: "straight",
+    },
+    markers: {
+      size: 4,
     },
     plotOptions: {
       bar: {
@@ -269,14 +272,17 @@ function renderProperty(payload) {
 
   document.getElementById("contextCard").hidden =
     !citywideOfficialPercentile && !zipOfficialPercentile;
-  document.getElementById("citywideContextText").textContent =
-    citywideOfficialPercentile
-      ? `Citywide: around the ${citywideOfficialPercentile} percentile.`
-      : "Citywide context is unavailable.";
-  document.getElementById("zipContextText").textContent =
-    zipOfficialPercentile && context.zip
-      ? `${context.zip.label}: around the ${zipOfficialPercentile} percentile.`
-      : "";
+  document.getElementById("citywideContextRow").hidden =
+    !citywideOfficialPercentile;
+  document.getElementById("zipContextRow").hidden =
+    !zipOfficialPercentile || !context.zip;
+  document.getElementById("citywideContextValue").textContent =
+    citywideOfficialPercentile || "-";
+  document.getElementById("zipContextValue").textContent =
+    zipOfficialPercentile || "-";
+  document.getElementById("zipContextHelper").textContent = context.zip
+    ? `in ${context.zip.label}`
+    : "";
 
   document.getElementById("estimateValueText").textContent = formatMoney(
     estimate.estimated_current_market_value,

@@ -246,6 +246,36 @@ body {
   line-height: 1.45;
 }
 
+.context-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 12px;
+  padding: 8px 0;
+  border-top: 1px solid var(--border-soft);
+}
+
+.context-row:first-of-type {
+  border-top: none;
+}
+
+.context-label,
+.context-helper {
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.35;
+}
+
+.context-value {
+  color: var(--heading);
+  font-size: 1.25rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.context-helper {
+  grid-column: 1 / -1;
+}
+
 .card-header {
   margin-bottom: 12px;
 }
