@@ -1,20 +1,22 @@
+/* Redesigned visual pass - structure preserved */
 * {
   box-sizing: border-box;
 }
 
 :root {
-  --bg: #eef1f5;
+  --bg: #f5f4f2;
   --surface: #ffffff;
-  --surface-soft: #f7f9fb;
-  --border: #cfd6df;
-  --border-soft: #e3e7ed;
-  --text: #1d2733;
-  --muted: #5d6875;
-  --heading: #0f2438;
+  --surface-soft: #f9f8f7;
+  --border: #e2e6ea;
+  --border-soft: #edf0f3;
+  --text: #1c2530;
+  --muted: #627282;
+  --heading: #0d1f30;
   --accent: #1f5f99;
+  --accent-light: #e8f0f8;
   --accent-dark: #164a78;
-  --success: #1f7a4d;
-  --error: #9f1d24;
+  --success: #2a7a52;
+  --error: #a01e25;
   --increase: #8a5a22;
   --decrease: #1f5f99;
 }
@@ -23,34 +25,35 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
 .widget-shell {
-  width: min(100%, 620px);
+  width: min(100%, 860px);
   margin: 0 auto;
-  padding: 20px;
+  padding: 32px 24px;
 }
 
 .widget-header {
-  margin-bottom: 16px;
+  margin-bottom: 24px;
 }
 
 .eyebrow,
 .section-label {
   margin: 0 0 6px;
   color: var(--accent);
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
 }
 
 .widget-header h1 {
-  margin: 0 0 8px;
+  margin: 0 0 6px;
   color: var(--heading);
-  font-size: 1.75rem;
-  line-height: 1.15;
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 .intro,
@@ -68,31 +71,24 @@ body {
 .lookup-message,
 .card-header p,
 .estimate-note,
-.source-note p {
+.source-note p,
+.purpose-label {
   margin: 0;
 }
 
-.card,
-.lookup-card {
-  margin-bottom: 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--surface);
+.lookup-section {
+  margin-bottom: 24px;
+  padding: 0;
+  border: none;
+  background: transparent;
 }
 
-.card {
-  padding: 18px;
-}
-
-.lookup-card {
-  padding: 16px;
-}
-
-.lookup-card label {
+.lookup-section label {
   display: block;
   margin-bottom: 8px;
   color: var(--heading);
-  font-weight: 700;
+  font-size: 0.875rem;
+  font-weight: 600;
 }
 
 .lookup-row {
@@ -104,28 +100,30 @@ body {
 .lookup-row input,
 .lookup-row button {
   min-height: 42px;
-  border-radius: 6px;
-  font-size: 1rem;
+  border-radius: 5px;
+  font-family: inherit;
+  font-size: 0.95rem;
 }
 
 .lookup-row input {
   width: 100%;
-  border: 1px solid #b8c2cf;
-  padding: 10px 12px;
+  border: 1px solid var(--border);
+  padding: 10px 14px;
+  background: var(--surface);
 }
 
 .lookup-row input:focus {
   border-color: var(--accent);
-  outline: 3px solid rgb(31 95 153 / 18%);
+  outline: 2px solid rgb(31 95 153 / 18%);
 }
 
 .lookup-row button {
   border: 1px solid var(--accent-dark);
-  padding: 10px 14px;
+  padding: 10px 16px;
   background: var(--accent);
   color: #ffffff;
   cursor: pointer;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .lookup-row button:disabled {
@@ -136,12 +134,12 @@ body {
 
 .helper-text {
   margin-top: 8px;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
 }
 
 .lookup-message {
-  margin-top: 8px;
-  font-size: 0.92rem;
+  margin-top: 6px;
+  font-size: 0.875rem;
   font-weight: 500;
 }
 
@@ -154,14 +152,18 @@ body {
 }
 
 .empty-state {
+  border: 1px solid var(--border);
+  border-radius: 8px;
   background: var(--surface-soft);
+  padding: 24px;
 }
 
 .empty-state h2,
 .card h2 {
-  margin: 0 0 8px;
+  margin: 0 0 10px;
   color: var(--heading);
-  font-size: 1.2rem;
+  font-size: 1.1rem;
+  font-weight: 600;
 }
 
 .empty-state p {
@@ -170,8 +172,46 @@ body {
   line-height: 1.55;
 }
 
+.result-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas:
+    "property official"
+    "history history"
+    "context estimate";
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.grid-property {
+  grid-area: property;
+}
+
+.grid-official {
+  grid-area: official;
+}
+
+.grid-history {
+  grid-area: history;
+}
+
+.grid-context {
+  grid-area: context;
+}
+
+.grid-estimate {
+  grid-area: estimate;
+}
+
+.card {
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
 .property-card h2 {
-  font-size: 1.35rem;
+  font-size: 1.25rem;
 }
 
 .property-details {
@@ -182,39 +222,54 @@ body {
   display: flex;
   justify-content: space-between;
   gap: 16px;
-  padding: 9px 0;
+  padding: 8px 0;
   border-top: 1px solid var(--border-soft);
 }
 
 .property-details dt {
   color: var(--muted);
+  font-size: 0.875rem;
 }
 
 .property-details dd {
   margin: 0;
   color: var(--text);
-  font-weight: 700;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
   text-align: right;
 }
 
+#propertyIdText {
+  font-family: 'SF Mono', 'Fira Code', ui-monospace, monospace;
+  font-size: 0.875em;
+}
+
 .official-card {
-  border-color: #9ab9d8;
-  border-left: 6px solid var(--accent);
-  background: #f8fbff;
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--accent);
+  border-left: 4px solid var(--accent);
+  background: #f4f8fd;
 }
 
 .official-value {
-  margin: 10px 0 4px;
+  margin: 12px 0 4px;
   color: var(--heading);
   font-size: 2.15rem;
   font-weight: 800;
+  font-variant-numeric: tabular-nums;
   line-height: 1;
 }
 
+.subtle-text {
+  margin: 4px 0 0;
+  font-size: 0.875rem;
+}
+
 .change-text {
-  margin: 12px 0 0;
+  margin: 10px 0 0;
   color: var(--text);
-  font-weight: 700;
+  font-size: 0.875rem;
+  font-weight: 500;
   line-height: 1.45;
 }
 
@@ -230,27 +285,49 @@ body {
   color: var(--muted);
 }
 
-.context-card {
-  border-color: var(--border-soft);
-  background: #fbfcfd;
-  padding: 14px 16px;
+.history-card {
+  overflow: hidden;
 }
 
-.context-card h2 {
+.card-header {
+  margin-bottom: 12px;
+}
+
+.card-header h2 {
+  margin-bottom: 4px;
   font-size: 1rem;
 }
 
-.context-text {
-  margin: 6px 0 0;
-  color: var(--muted);
-  line-height: 1.45;
+.card-header p {
+  font-size: 0.875rem;
+}
+
+.history-chart {
+  width: 100%;
+  min-height: 280px;
+  overflow: hidden;
+}
+
+.history-chart .apexcharts-canvas {
+  max-width: 100%;
+}
+
+.context-card,
+.estimate-card {
+  border-color: var(--border-soft);
+  background: var(--surface-soft);
+}
+
+.context-card h2 {
+  margin-bottom: 12px;
+  font-size: 0.95rem;
 }
 
 .context-row {
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 2px 12px;
-  padding: 8px 0;
+  padding: 10px 0;
   border-top: 1px solid var(--border-soft);
 }
 
@@ -261,73 +338,73 @@ body {
 .context-label,
 .context-helper {
   color: var(--muted);
-  font-size: 0.88rem;
+  font-size: 0.84rem;
   line-height: 1.35;
 }
 
 .context-value {
   color: var(--heading);
-  font-size: 1.25rem;
+  font-size: 1.6rem;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
   line-height: 1;
 }
 
 .context-helper {
   grid-column: 1 / -1;
+  font-size: 0.8rem;
 }
 
-.card-header {
-  margin-bottom: 12px;
-}
-
-.history-card {
-  overflow: hidden;
-}
-
-.history-chart {
-  width: 100%;
-  min-height: 300px;
-  overflow: hidden;
-}
-
-.history-chart .apexcharts-canvas {
-  max-width: 100%;
-}
-
-.estimate-card {
-  background: var(--surface-soft);
+.purpose-label {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .estimate-value {
   margin: 10px 0 6px;
   color: var(--heading);
-  font-size: 1.55rem;
-  font-weight: 800;
+  font-size: 1.65rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
 .estimate-note {
   margin-top: 12px;
   padding-top: 12px;
   border-top: 1px solid var(--border-soft);
-  font-size: 0.92rem;
+  font-size: 0.84rem;
 }
 
 .source-note {
-  padding: 0 2px 8px;
-  font-size: 0.86rem;
+  padding: 4px 2px 12px;
+  color: var(--muted);
+  font-size: 0.84rem;
 }
 
 [hidden] {
   display: none !important;
 }
 
-@media (width <= 520px) {
+@media (width <= 680px) {
   .widget-shell {
-    padding: 14px;
+    padding: 16px;
   }
 
   .lookup-row {
     grid-template-columns: 1fr;
+  }
+
+  .result-grid {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "property"
+      "official"
+      "history"
+      "context"
+      "estimate";
   }
 
   .official-value {

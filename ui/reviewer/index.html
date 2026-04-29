@@ -1,10 +1,13 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CAMA Reviewer Dashboard</title>
 
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <link rel="stylesheet" href="./style.css" />
 </head>
@@ -14,15 +17,24 @@
       <div class="map-toolbar">
         <div>
           <p class="eyebrow">Philadelphia CAMA</p>
-          <h1>Reviewer Dashboard</h1>
+          <h1 class="page-title">Reviewer Dashboard</h1>
         </div>
         <div class="toolbar-controls">
-          <label class="geography-control" for="geographySelect">
-            Geography
-            <select id="geographySelect">
-              <option value="citywide">Citywide</option>
-            </select>
-          </label>
+          <div class="geography-control" role="group" aria-label="Geography filter">
+            <button type="button" class="geo-tab active" data-geo="citywide" id="geoTabCitywide">Citywide</button>
+            <button type="button" class="geo-tab" data-geo="zip" id="geoTabZip">By ZIP Code</button>
+            <div class="zip-input-row" id="zipInputRow" hidden>
+              <input
+                type="text"
+                id="zipCodeInput"
+                inputmode="numeric"
+                maxlength="5"
+                placeholder="Enter ZIP code"
+                aria-label="ZIP code filter"
+              />
+              <button type="button" id="zipApplyBtn" class="zip-apply-btn">Apply</button>
+            </div>
+          </div>
           <div class="mode-toggle" aria-label="Map value mode">
             <button type="button" class="mode-button active" data-mode="official">Official Value</button>
             <button type="button" class="mode-button" data-mode="estimate">Model Estimate</button>
@@ -95,8 +107,9 @@
           </dl>
         </div>
 
+        <hr class="section-rule" />
+
         <div class="selected-group comparison-block">
-          <h3>Comparison</h3>
           <dl class="detail-list">
             <div>
               <dt>Official Assessed Value</dt>
@@ -113,8 +126,9 @@
           </dl>
         </div>
 
+        <hr class="section-rule" />
+
         <div class="selected-group context-block">
-          <h3>Context</h3>
           <dl class="detail-list">
             <div>
               <dt>Official percentile citywide</dt>

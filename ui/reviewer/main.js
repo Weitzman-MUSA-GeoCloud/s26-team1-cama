@@ -817,16 +817,47 @@ function updateCharts() {
     `${area.label}; values above $2.5M are grouped.`;
 }
 
-function populateGeographySelect() {
-  const select = document.getElementById("geographySelect");
-  const zipCodes = Object.keys(zipContext?.areas || {}).sort();
+function updateGeographyControls() {
+  const geoTabCitywide = document.getElementById("geoTabCitywide");
+  const geoTabZip = document.getElementById("geoTabZip");
+  const zipInputRow = document.getElementById("zipInputRow");
 
-  zipCodes.forEach((zipCode) => {
-    const option = document.createElement("option");
-    option.value = zipCode;
-    option.textContent = `ZIP ${zipCode}`;
-    select.appendChild(option);
-  });
+  if (!geoTabCitywide || !geoTabZip || !zipInputRow) {
+    return;
+  }
+
+  const isCitywide = activeGeography === "citywide";
+  geoTabCitywide.classList.toggle("active", isCitywide);
+  geoTabZip.classList.toggle("active", !isCitywide);
+  geoTabZip.textContent = isCitywide
+    ? "By ZIP Code"
+    : `By ZIP Code ${activeGeography}`;
+  zipInputRow.hidden = isCitywide;
+}
+
+function handleGeographyChange(nextGeography) {
+  const normalizedGeography =
+    nextGeography === "citywide" ? "citywide" : normalizeZip(nextGeography);
+  const previousGeography = activeGeography;
+  activeGeography = normalizedGeography;
+  updateActiveStyleState();
+  updateGeographyControls();
+
+  if (
+    selectedProperties &&
+    selectedZip &&
+    getFeatureZip(selectedProperties) !== selectedZip
+  ) {
+    clearSelection();
+  }
+
+  if (selectedZip && previousGeography !== activeGeography) {
+    focusSelectedZip(selectedZip);
+  }
+
+  updateSummary();
+  updateCharts();
+  renderTileLayer();
 }
 
 function renderModeControls() {
@@ -1059,7 +1090,7 @@ async function initializeDashboard() {
     metadata = await metadataResponse.json();
     zipContext = await zipResponse.json();
     await loadDistributionInputs();
-    populateGeographySelect();
+    updateGeographyControls();
     updateActiveStyleState();
     updateSummary();
     updateCharts();
@@ -1080,6 +1111,12 @@ async function initializeDashboard() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  const geoTabCitywide = document.getElementById("geoTabCitywide");
+  const geoTabZip = document.getElementById("geoTabZip");
+  const zipInputRow = document.getElementById("zipInputRow");
+  const zipCodeInput = document.getElementById("zipCodeInput");
+  const zipApplyBtn = document.getElementById("zipApplyBtn");
+
   document.querySelectorAll(".mode-button").forEach((button) => {
     button.addEventListener("click", () => {
       activeMode = button.dataset.mode;
@@ -1087,23 +1124,47 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  document.getElementById("geographySelect").addEventListener("change", (event) => {
-    const previousGeography = activeGeography;
-    activeGeography = event.target.value;
-    updateActiveStyleState();
-    if (
-      selectedProperties &&
-      selectedZip &&
-      getFeatureZip(selectedProperties) !== selectedZip
-    ) {
-      clearSelection();
+  function setGeoTab(mode) {
+    const isCitywide = mode === "citywide";
+    geoTabCitywide.classList.toggle("active", isCitywide);
+    geoTabZip.classList.toggle("active", !isCitywide);
+    zipInputRow.hidden = isCitywide;
+
+    if (isCitywide) {
+      zipCodeInput.value = "";
+      handleGeographyChange("citywide");
+      return;
     }
-    if (selectedZip && previousGeography !== activeGeography) {
-      focusSelectedZip(selectedZip);
+
+    if (activeGeography === "citywide") {
+      geoTabZip.textContent = "By ZIP Code - none selected";
     }
-    updateSummary();
-    updateCharts();
-    renderTileLayer();
+  }
+
+  function applyZip() {
+    const zip = zipCodeInput.value.trim();
+
+    if (/^\d{5}$/.test(zip)) {
+      handleGeographyChange(zip);
+      return;
+    }
+
+    zipCodeInput.style.borderColor = "var(--error)";
+    setTimeout(() => {
+      zipCodeInput.style.borderColor = "";
+    }, 1200);
+  }
+
+  geoTabCitywide.addEventListener("click", () => setGeoTab("citywide"));
+  geoTabZip.addEventListener("click", () => {
+    setGeoTab("zip");
+    zipCodeInput.focus();
+  });
+  zipApplyBtn.addEventListener("click", applyZip);
+  zipCodeInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      applyZip();
+    }
   });
 
   document.getElementById("clearSelectionBtn").addEventListener("click", clearSelection);

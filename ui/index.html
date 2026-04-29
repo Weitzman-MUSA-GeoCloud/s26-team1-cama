@@ -3,54 +3,106 @@
 
 <head>
   <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MUSA 5090 - CAMA Project</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <style>
+    :root {
+      --bg: #f5f4f2;
+      --surface: #ffffff;
+      --border: #e2e6ea;
+      --text: #1c2530;
+      --muted: #627282;
+      --heading: #0d1f30;
+      --accent: #1f5f99;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: sans-serif;
       margin: 0;
-      padding: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
     }
 
     main {
       display: flex;
+      min-height: 100vh;
       flex-direction: column;
-      justify-content: center;
       align-items: center;
-      height: 100vh;
+      justify-content: center;
+      padding: 32px 20px;
     }
 
     h1 {
+      margin: 0 0 10px;
+      color: var(--heading);
+      font-size: 1.5rem;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .subtitle {
+      max-width: 440px;
+      margin: 0 0 28px;
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.5;
       text-align: center;
     }
 
     nav {
-      display: flex;
-      justify-content: center;
-      gap: 1rem;
-    }
-
-    @media (orientation: portrait) {
-      nav {
-        flex-direction: column;
-      }
+      display: grid;
+      width: min(100%, 620px);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
     }
 
     a {
       display: block;
-      padding: 2rem;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--text);
       text-decoration: none;
-      color: #333;
-      transition: all 0.2s ease-in-out;
+      transition: border-color 0.15s ease, background 0.15s ease;
     }
 
-    a:hover {
-      background-color: #f5f5f5;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      transform: translateY(-2px);
+    a:hover,
+    a:focus-visible {
+      border-color: var(--accent);
+      background: #fbfcfd;
+      outline: none;
+    }
+
+    a strong {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--heading);
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    a span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.875rem;
+      font-weight: 400;
+      line-height: 1.45;
+    }
+
+    @media (width <= 620px) {
+      nav {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -58,9 +110,16 @@
 <body>
   <main>
     <h1>MUSA 5090 - CAMA Project</h1>
-    <nav>
-      <a href="./reviewer/index.html">Tax Assessor Review UI</a>
-      <a href="./widget/index.html">Property Owner Widget UI</a>
+    <p class="subtitle">Philadelphia residential property assessment - MUSA 5090</p>
+    <nav aria-label="Project interfaces">
+      <a href="./reviewer/index.html">
+        <strong>Tax Assessor Review UI</strong>
+        <span>Citywide map and distribution analysis for assessment reviewers</span>
+      </a>
+      <a href="./widget/index.html">
+        <strong>Property Owner Widget UI</strong>
+        <span>Property-level official assessment history and market estimate</span>
+      </a>
     </nav>
   </main>
 </body>
