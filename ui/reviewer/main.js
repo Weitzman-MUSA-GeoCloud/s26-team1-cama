@@ -32,6 +32,26 @@ const GAP_BINS = [
   { min: 50, max: 75, label: "+50% to +75%", color: "#b9793f" },
   { min: 75, label: "&gt; +75%", color: "#87552c" },
 ];
+const ZIP_FOCUS_ZOOM = 14;
+const ZIP_CENTERS = {
+  19102: [39.9522, -75.1659],
+  19103: [39.9529, -75.1741],
+  19104: [39.9584, -75.2022],
+  19106: [39.9487, -75.1458],
+  19107: [39.9488, -75.159],
+  19121: [39.9813, -75.1742],
+  19122: [39.9774, -75.1458],
+  19123: [39.9635, -75.148],
+  19125: [39.9789, -75.1251],
+  19130: [39.9681, -75.1719],
+  19134: [39.9919, -75.1128],
+  19140: [40.0117, -75.1456],
+  19143: [39.9449, -75.2264],
+  19145: [39.9138, -75.1842],
+  19146: [39.9395, -75.1796],
+  19147: [39.9367, -75.1547],
+  19148: [39.9202, -75.1596],
+};
 
 const map = L.map("map", {
   zoomControl: true,
@@ -55,6 +75,12 @@ let citywideOfficialRows = [];
 let citywideModelRows = [];
 let selectedProperties = null;
 let selectedLookupPayload = null;
+let selectedZip = "";
+let activeValueBreaks = [];
+let breakCache = {
+  citywide: {},
+  zip: {},
+};
 
 const modes = {
   official: {
@@ -228,20 +254,65 @@ function computeWeightedQuantileBreaksFromBins(bins, classCount = 7) {
 }
 
 function getChoroplethBins(modeName = activeMode) {
-  const area = getAreaData();
-  const rows =
-    modeName === "estimate" ? area.modelRows : area.officialRows;
+  return getRowsForBreaks(modeName, activeGeography);
+}
+
+function getRowsForBreaks(modeName, geography) {
   const fallbackRows =
     modeName === "estimate" ? citywideModelRows : citywideOfficialRows;
+
+  if (geography === "citywide") {
+    return fallbackRows;
+  }
+
+  const area = zipContext?.areas?.[normalizeZip(geography)];
+  const rows =
+    modeName === "estimate"
+      ? normalizeBinRows(area?.model?.bins || [])
+      : normalizeBinRows(area?.official?.bins || []);
 
   return rows.length > 0 ? rows : fallbackRows;
 }
 
-function getValueClassBreaks(modeName = activeMode) {
-  return computeWeightedQuantileBreaksFromBins(
-    getChoroplethBins(modeName),
-    VALUE_COLORS.length,
-  );
+function getCachedBreaks(modeName, geography) {
+  if (modeName === "gap") {
+    return [];
+  }
+
+  if (geography === "citywide") {
+    if (!breakCache.citywide[modeName]) {
+      breakCache.citywide[modeName] = computeWeightedQuantileBreaksFromBins(
+        getRowsForBreaks(modeName, "citywide"),
+        VALUE_COLORS.length,
+      );
+    }
+
+    return breakCache.citywide[modeName];
+  }
+
+  const zipCode = normalizeZip(geography);
+  breakCache.zip[zipCode] = breakCache.zip[zipCode] || {};
+
+  if (!breakCache.zip[zipCode][modeName]) {
+    breakCache.zip[zipCode][modeName] = computeWeightedQuantileBreaksFromBins(
+      getRowsForBreaks(modeName, zipCode),
+      VALUE_COLORS.length,
+    );
+  }
+
+  return breakCache.zip[zipCode][modeName];
+}
+
+function updateActiveStyleState() {
+  selectedZip = activeGeography === "citywide" ? "" : normalizeZip(activeGeography);
+  activeValueBreaks = getCachedBreaks(activeMode, activeGeography);
+}
+
+function resetBreakCache() {
+  breakCache = {
+    citywide: {},
+    zip: {},
+  };
 }
 
 function getGapBin(value) {
@@ -267,7 +338,7 @@ function getColor(value, modeName = activeMode) {
     return gapBin ? gapBin.color : GAP_UNAVAILABLE_COLOR;
   }
 
-  const classBreaks = getValueClassBreaks(modeName);
+  const classBreaks = modeName === activeMode ? activeValueBreaks : [];
 
   if (!Number.isFinite(number)) {
     return "#cfd6df";
@@ -289,10 +360,7 @@ function getColor(value, modeName = activeMode) {
 
 function styleFeature(properties) {
   const value = getTilePropertyValue(properties);
-  const featureZip = getFeatureZip(properties);
-  const outsideSelectedZip =
-    activeGeography !== "citywide" &&
-    featureZip !== normalizeZip(activeGeography);
+  const outsideSelectedZip = selectedZip && getFeatureZip(properties) !== selectedZip;
   const gapUnavailable = activeMode === "gap" && !Number.isFinite(Number(value));
 
   return {
@@ -318,9 +386,77 @@ function getTileConfig() {
   };
 }
 
+function getZipBounds(zipCode) {
+  const bounds = zipContext?.areas?.[zipCode]?.bounds;
+
+  if (Array.isArray(bounds) && bounds.length === 2) {
+    return L.latLngBounds(bounds);
+  }
+
+  if (
+    bounds &&
+    Number.isFinite(Number(bounds.south)) &&
+    Number.isFinite(Number(bounds.west)) &&
+    Number.isFinite(Number(bounds.north)) &&
+    Number.isFinite(Number(bounds.east))
+  ) {
+    return L.latLngBounds(
+      [Number(bounds.south), Number(bounds.west)],
+      [Number(bounds.north), Number(bounds.east)],
+    );
+  }
+
+  return null;
+}
+
+function getZipCenter(zipCode) {
+  const center = zipContext?.areas?.[zipCode]?.center;
+
+  if (Array.isArray(center) && center.length === 2) {
+    return [Number(center[0]), Number(center[1])];
+  }
+
+  if (
+    center &&
+    Number.isFinite(Number(center.lat)) &&
+    Number.isFinite(Number(center.lng))
+  ) {
+    return [Number(center.lat), Number(center.lng)];
+  }
+
+  return ZIP_CENTERS[zipCode] || null;
+}
+
+function focusSelectedZip(zipCode) {
+  if (!map || !zipCode) {
+    return;
+  }
+
+  const bounds = getZipBounds(zipCode);
+
+  if (bounds?.isValid()) {
+    map.fitBounds(bounds, {
+      padding: [24, 24],
+      maxZoom: 15,
+    });
+    return;
+  }
+
+  const center = getZipCenter(zipCode);
+  const targetZoom = Math.max(map.getZoom(), ZIP_FOCUS_ZOOM);
+
+  if (center) {
+    map.flyTo(center, targetZoom, {
+      animate: true,
+    });
+    return;
+  }
+
+  map.setZoom(targetZoom);
+}
+
 function renderLegend() {
   const mode = modes[activeMode];
-  const valueClassBreaks = getValueClassBreaks();
 
   if (!legendControl) {
     legendControl = L.control({ position: "bottomright" });
@@ -344,8 +480,8 @@ function renderLegend() {
           `,
         )
       : mode.colors.map((color, index) => {
-          const lower = valueClassBreaks[index];
-          const upper = valueClassBreaks[index + 1];
+          const lower = activeValueBreaks[index];
+          const upper = activeValueBreaks[index + 1];
           const label =
             index === mode.colors.length - 1
               ? `${formatModeValue(lower)}+`
@@ -417,10 +553,7 @@ function renderTileLayer() {
   propertyTileLayer.on("click", (event) => {
     const properties = event.layer.properties;
 
-    if (
-      activeGeography !== "citywide" &&
-      getFeatureZip(properties) !== normalizeZip(activeGeography)
-    ) {
+    if (selectedZip && getFeatureZip(properties) !== selectedZip) {
       setStatus(`That property is outside ZIP ${activeGeography}.`);
       return;
     }
@@ -694,6 +827,7 @@ function renderModeControls() {
   document.querySelectorAll(".mode-button").forEach((button) => {
     button.classList.toggle("active", button.dataset.mode === activeMode);
   });
+  updateActiveStyleState();
   updateSummary();
   renderLegend();
 
@@ -902,6 +1036,7 @@ async function loadDistributionInputs() {
     officialPayload.filter((row) => Number(row.tax_year) === latestTaxYear),
   );
   citywideModelRows = normalizeBinRows(modelPayload);
+  resetBreakCache();
 }
 
 async function initializeDashboard() {
@@ -919,6 +1054,7 @@ async function initializeDashboard() {
     zipContext = await zipResponse.json();
     await loadDistributionInputs();
     populateGeographySelect();
+    updateActiveStyleState();
     updateSummary();
     updateCharts();
     renderTileLayer();
@@ -931,6 +1067,7 @@ async function initializeDashboard() {
     );
     metadata = metadata || {};
     zipContext = zipContext || { areas: {} };
+    updateActiveStyleState();
     updateSummary();
     renderTileLayer();
   }
@@ -945,13 +1082,18 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   document.getElementById("geographySelect").addEventListener("change", (event) => {
+    const previousGeography = activeGeography;
     activeGeography = event.target.value;
+    updateActiveStyleState();
     if (
       selectedProperties &&
-      activeGeography !== "citywide" &&
-      getFeatureZip(selectedProperties) !== normalizeZip(activeGeography)
+      selectedZip &&
+      getFeatureZip(selectedProperties) !== selectedZip
     ) {
       clearSelection();
+    }
+    if (selectedZip && previousGeography !== activeGeography) {
+      focusSelectedZip(selectedZip);
     }
     updateSummary();
     updateCharts();
