@@ -1,7 +1,9 @@
 .gcloudignore
-.git
-.gitignore
+.venv/
+venv/
+env/
 __pycache__/
 *.pyc
-env/
-.venv/
+.env
+*.log
+.DS_Store

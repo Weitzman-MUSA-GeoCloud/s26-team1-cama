@@ -5,6 +5,25 @@ files, loads core tables, builds derived tables, runs the current assessment
 prediction job, exports dashboard configuration files, and generates property
 map vector tiles.
 
+## Environment
+
+Use the deployed project, region, service account, buckets, and datasets:
+
+```bash
+export PROJECT_ID="musa5090s26-team1"
+export REGION="us-east4"
+export SA="data-pipeline-user@${PROJECT_ID}.iam.gserviceaccount.com"
+
+export RAW_BUCKET="musa5090s26-team1-raw_data"
+export PREPARED_BUCKET="musa5090s26-team1-prepared_data"
+export TEMP_BUCKET="musa5090s26-team1-temp_data"
+export PUBLIC_BUCKET="musa5090s26-team1-public"
+
+export BQ_SOURCE_DATASET="source"
+export BQ_CORE_DATASET="core"
+export BQ_DERIVED_DATASET="derived"
+```
+
 ## Required Cloud Functions
 
 The workflow expects these HTTP Cloud Functions to exist in project
@@ -29,28 +48,14 @@ The workflow expects these HTTP Cloud Functions to exist in project
 
 ## Required Cloud Run Jobs
 
-The workflow uses only these Cloud Run jobs in `us-east4`:
+The workflow uses these Cloud Run jobs in `us-east4`:
 
 - `predict-current-assessments`
 - `generate-property-map-tiles`
 
-## CORS
-
-CORS for the public bucket is configured separately using
-`tasks/data-pipeline/CORS.md`. Do not mix CORS setup into the workflow deploy
-steps.
-
 ## Service Account and IAM
 
-Use this service account for the workflow and Scheduler trigger:
-
-```bash
-export PROJECT_ID="musa5090s26-team1"
-export REGION="us-east4"
-export SA="data-pipeline-user@${PROJECT_ID}.iam.gserviceaccount.com"
-```
-
-Check whether the service account exists:
+Check whether the workflow service account exists:
 
 ```bash
 gcloud iam service-accounts describe "$SA" \
@@ -80,11 +85,30 @@ gcloud projects add-iam-policy-binding "$PROJECT_ID" \
 If the workflow service account lacks permission to execute Cloud Run jobs
 during deployment or testing, grant the narrowest additional role needed.
 
+## Deployment Notes From Testing
+
+- Use the real bucket names with the `_data` suffix for raw, prepared, and temp buckets.
+- Extract functions need sufficient resources, for example 1Gi memory and 1800s timeout.
+- Prepare functions may need more memory; `prepare-opa-assessments` and `prepare-pwd-parcels` needed 4Gi memory and 1800s timeout during testing.
+- Load functions should use `PREPARED_BUCKET=musa5090s26-team1-prepared_data`.
+- `transform-current-assessment-bins` uses entry point `main`, not `run_sql`.
+- `export-property-tile-info` is heavy and should use larger resources, for example 4Gi memory and 1800s timeout.
+- `predict-current-assessments` is a Cloud Run job, not a Cloud Function.
+- `generate-property-map-tiles` is a Cloud Run job that uses `TEMP_BUCKET`, `PUBLIC_BUCKET`, and sufficient CPU/memory resources.
+
+## CORS
+
+CORS for the public bucket is configured separately using
+`tasks/data-pipeline/CORS.md`. Do not mix CORS setup into the workflow deploy
+steps.
+
 ## Safe To Commit
 
 - `tasks/data-pipeline/workflow.yaml`
 - `tasks/data-pipeline/DEPLOY.md`
-- Small deployment documentation updates
+- `tasks/data-pipeline/CORS.md`
+- `tasks/data-pipeline/cors.json`
+- Task-level `.gcloudignore` files
 
 ## Do Not Commit
 
@@ -97,41 +121,41 @@ during deployment or testing, grant the narrowest additional role needed.
 - Raw or prepared data files
 - Generated JSON outputs
 
-## Deploy Or Update The Workflow
-
-```bash
-gcloud workflows deploy data-pipeline \
-  --source=tasks/data-pipeline/workflow.yaml \
-  --location=us-east4 \
-  --project=musa5090s26-team1 \
-  --service-account="data-pipeline-user@musa5090s26-team1.iam.gserviceaccount.com"
-```
-
 ## Deploy A Test Workflow
 
 ```bash
 gcloud workflows deploy data-pipeline-test \
   --source=tasks/data-pipeline/workflow.yaml \
-  --location=us-east4 \
-  --project=musa5090s26-team1 \
-  --service-account="data-pipeline-user@musa5090s26-team1.iam.gserviceaccount.com"
+  --location="$REGION" \
+  --project="$PROJECT_ID" \
+  --service-account="$SA"
 ```
 
 ## Run The Test Workflow Manually
 
 ```bash
 gcloud workflows run data-pipeline-test \
-  --location=us-east4 \
-  --project=musa5090s26-team1
+  --location="$REGION" \
+  --project="$PROJECT_ID"
 ```
 
 ## List Recent Test Executions
 
 ```bash
 gcloud workflows executions list data-pipeline-test \
-  --location=us-east4 \
-  --project=musa5090s26-team1 \
+  --location="$REGION" \
+  --project="$PROJECT_ID" \
   --limit=5
+```
+
+## Deploy Or Update The Production Workflow
+
+```bash
+gcloud workflows deploy data-pipeline \
+  --source=tasks/data-pipeline/workflow.yaml \
+  --location="$REGION" \
+  --project="$PROJECT_ID" \
+  --service-account="$SA"
 ```
 
 ## Weekly Cloud Scheduler Trigger
@@ -141,28 +165,28 @@ has run successfully. Suggested schedule: Monday at 6:00 AM America/New_York.
 
 ```bash
 gcloud scheduler jobs create http data-pipeline-weekly \
-  --location=us-east4 \
+  --location="$REGION" \
   --schedule="0 6 * * 1" \
   --time-zone="America/New_York" \
-  --uri="https://workflowexecutions.googleapis.com/v1/projects/musa5090s26-team1/locations/us-east4/workflows/data-pipeline/executions" \
+  --uri="https://workflowexecutions.googleapis.com/v1/projects/${PROJECT_ID}/locations/${REGION}/workflows/data-pipeline/executions" \
   --http-method=POST \
   --message-body="{}" \
   --headers="Content-Type=application/json" \
-  --oauth-service-account-email="data-pipeline-user@musa5090s26-team1.iam.gserviceaccount.com"
+  --oauth-service-account-email="$SA"
 ```
 
 If the Scheduler job already exists, update it after testing succeeds:
 
 ```bash
 gcloud scheduler jobs update http data-pipeline-weekly \
-  --location=us-east4 \
+  --location="$REGION" \
   --schedule="0 6 * * 1" \
   --time-zone="America/New_York" \
-  --uri="https://workflowexecutions.googleapis.com/v1/projects/musa5090s26-team1/locations/us-east4/workflows/data-pipeline/executions" \
+  --uri="https://workflowexecutions.googleapis.com/v1/projects/${PROJECT_ID}/locations/${REGION}/workflows/data-pipeline/executions" \
   --http-method=POST \
   --message-body="{}" \
   --headers="Content-Type=application/json" \
-  --oauth-service-account-email="data-pipeline-user@musa5090s26-team1.iam.gserviceaccount.com"
+  --oauth-service-account-email="$SA"
 ```
 
 ## Verification Checklist
@@ -195,11 +219,11 @@ Cloud Run job executions:
 ```bash
 gcloud run jobs executions list \
   --job=predict-current-assessments \
-  --region=us-east4 \
-  --project=musa5090s26-team1
+  --region="$REGION" \
+  --project="$PROJECT_ID"
 
 gcloud run jobs executions list \
   --job=generate-property-map-tiles \
-  --region=us-east4 \
-  --project=musa5090s26-team1
+  --region="$REGION" \
+  --project="$PROJECT_ID"
 ```

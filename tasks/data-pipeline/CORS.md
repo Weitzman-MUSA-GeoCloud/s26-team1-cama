@@ -15,6 +15,7 @@ The frontend reads these public asset URL patterns:
 ```text
 https://storage.googleapis.com/musa5090s26-team1-public/configs/tax_year_assessment_bins.json
 https://storage.googleapis.com/musa5090s26-team1-public/configs/current_assessment_bins.json
+https://storage.googleapis.com/musa5090s26-team1-public/configs/map_style_metadata.json
 https://storage.googleapis.com/musa5090s26-team1-public/tiles/properties/{z}/{x}/{y}.pbf
 ```
 
