@@ -5,7 +5,7 @@
 
 :root {
   --bg: #f5f4f2;
-  --surface: #ffffff;
+  --surface: #fff;
   --surface-soft: #f9f8f7;
   --border: #e2e6ea;
   --border-soft: #edf0f3;
@@ -25,7 +25,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: Inter, system-ui, -apple-system, sans-serif;
 }
 
 .widget-shell {
@@ -121,7 +121,7 @@ body {
   border: 1px solid var(--accent-dark);
   padding: 10px 16px;
   background: var(--accent);
-  color: #ffffff;
+  color: #fff;
   cursor: pointer;
   font-weight: 600;
 }
@@ -239,7 +239,7 @@ body {
   text-align: right;
 }
 
-#propertyIdText {
+#property-id-text {
   font-family: 'SF Mono', 'Fira Code', ui-monospace, monospace;
   font-size: 0.875em;
 }

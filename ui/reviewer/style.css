@@ -5,7 +5,7 @@
 
 :root {
   --bg: #f5f4f2;
-  --surface: #ffffff;
+  --surface: #fff;
   --surface-soft: #f9f8f7;
   --border: #e2e6ea;
   --border-soft: #edf0f3;
@@ -25,7 +25,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: Inter, system-ui, -apple-system, sans-serif;
 }
 
 .reviewer-page {
@@ -136,7 +136,7 @@ h3 {
   margin-top: 4px;
 }
 
-#zipCodeInput {
+#zip-code-input {
   width: 120px;
   min-height: 32px;
   border: 1px solid var(--border);
@@ -146,7 +146,7 @@ h3 {
   font-size: 0.875rem;
 }
 
-#zipCodeInput:focus {
+#zip-code-input:focus {
   border-color: var(--accent);
   outline: 2px solid rgb(31 95 153 / 18%);
 }
@@ -154,7 +154,7 @@ h3 {
 .zip-apply-btn {
   border: 1px solid var(--accent-dark);
   background: var(--accent);
-  color: #ffffff;
+  color: #fff;
   font-size: 0.84rem;
   font-weight: 600;
   padding: 6px 10px;
@@ -179,7 +179,7 @@ h3 {
 .mode-button.active {
   border-color: var(--accent);
   background: var(--accent);
-  color: #ffffff;
+  color: #fff;
 }
 
 #map {
@@ -266,7 +266,7 @@ h3 {
   text-align: right;
 }
 
-#selectedPropertyId {
+#selected-property-id {
   font-family: 'SF Mono', 'Fira Code', ui-monospace, monospace;
   font-size: 0.88em;
 }
@@ -335,7 +335,7 @@ h3 {
   border-top: 1px solid var(--border-soft);
 }
 
-#selectedGapValue {
+#selected-gap-value {
   font-size: 1.02rem;
   font-variant-numeric: tabular-nums;
 }
