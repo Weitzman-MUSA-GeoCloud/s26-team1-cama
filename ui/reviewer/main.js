@@ -32,10 +32,10 @@ const GAP_BINS = [
   { min: 50, max: 75, label: "+50% to +75%", color: "#b9793f" },
   { min: 75, label: "&gt; +75%", color: "#87552c" },
 ];
-const ZIP_FOCUS_ZOOM = 14;
+const ZIP_FOCUS_ZOOM = 16;
 const ZIP_CENTERS = {
   19102: [39.9522, -75.1659],
-  19103: [39.9529, -75.1741],
+  19103: [39.9526, -75.174],
   19104: [39.9584, -75.2022],
   19106: [39.9487, -75.1458],
   19107: [39.9488, -75.159],
@@ -363,12 +363,23 @@ function styleFeature(properties) {
   const outsideSelectedZip = selectedZip && getFeatureZip(properties) !== selectedZip;
   const gapUnavailable = activeMode === "gap" && !Number.isFinite(Number(value));
 
+  if (outsideSelectedZip) {
+    return {
+      fill: true,
+      fillColor: "#ffffff",
+      fillOpacity: 0,
+      color: "#ffffff",
+      opacity: 0,
+      weight: 0,
+    };
+  }
+
   return {
     fill: true,
-    fillColor: outsideSelectedZip ? "#d9dde5" : getColor(value),
-    fillOpacity: outsideSelectedZip || gapUnavailable ? 0.2 : 0.72,
+    fillColor: getColor(value),
+    fillOpacity: gapUnavailable ? 0.2 : 0.72,
     color: "#ffffff",
-    opacity: outsideSelectedZip ? 0.1 : 0.35,
+    opacity: 0.35,
     weight: 0.45,
   };
 }
@@ -433,26 +444,16 @@ function focusSelectedZip(zipCode) {
   }
 
   const bounds = getZipBounds(zipCode);
-
-  if (bounds?.isValid()) {
-    map.fitBounds(bounds, {
-      padding: [24, 24],
-      maxZoom: 15,
-    });
-    return;
-  }
-
-  const center = getZipCenter(zipCode);
-  const targetZoom = Math.max(map.getZoom(), ZIP_FOCUS_ZOOM);
+  const center = getZipCenter(zipCode) || (bounds?.isValid() ? bounds.getCenter() : null);
 
   if (center) {
-    map.flyTo(center, targetZoom, {
+    map.flyTo(center, ZIP_FOCUS_ZOOM, {
       animate: true,
     });
     return;
   }
 
-  map.setZoom(targetZoom);
+  map.setZoom(ZIP_FOCUS_ZOOM);
 }
 
 function renderLegend() {
@@ -521,6 +522,11 @@ function renderTileLayer() {
 
   propertyTileLayer.on("mouseover", (event) => {
     const properties = event.layer.properties;
+
+    if (selectedZip && getFeatureZip(properties) !== selectedZip) {
+      return;
+    }
+
     const value = getTilePropertyValue(properties);
     const featureZip = getFeatureZip(properties);
     const gapLine =
