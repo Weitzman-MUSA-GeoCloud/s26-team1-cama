@@ -45,6 +45,7 @@ The workflow expects these HTTP Cloud Functions to exist in project
 - `export-current-assessment-bins`
 - `export-property-tile-info`
 - `export-map-style-metadata`
+- `export-zip-assessment-context`
 
 ## Required Cloud Run Jobs
 
@@ -202,6 +203,7 @@ GCS config outputs:
 - `gs://musa5090s26-team1-public/configs/current_assessment_bins.json`
 - `gs://musa5090s26-team1-public/configs/tax_year_assessment_bins.json`
 - `gs://musa5090s26-team1-public/configs/map_style_metadata.json`
+- `gs://musa5090s26-team1-public/configs/zip_assessment_context.json`
 
 GCS tile outputs:
 
@@ -212,6 +214,7 @@ Frontend public URLs:
 - `https://storage.googleapis.com/musa5090s26-team1-public/configs/current_assessment_bins.json`
 - `https://storage.googleapis.com/musa5090s26-team1-public/configs/tax_year_assessment_bins.json`
 - `https://storage.googleapis.com/musa5090s26-team1-public/configs/map_style_metadata.json`
+- `https://storage.googleapis.com/musa5090s26-team1-public/configs/zip_assessment_context.json`
 - `https://storage.googleapis.com/musa5090s26-team1-public/tiles/properties/{z}/{x}/{y}.pbf`
 
 Cloud Run job executions:

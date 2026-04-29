@@ -1,39 +1,9 @@
-const SAMPLE_PROPERTIES = [
-  {
-    propertyId: "502244720",
-    address: "Sample property record",
-    neighborhood: "Philadelphia",
-    lat: 39.9526,
-    lng: -75.1652,
-    history: [
-      { year: "2015", marketValue: 169600 },
-      { year: "2016", marketValue: 169600 },
-      { year: "2017", marketValue: 169600 },
-      { year: "2018", marketValue: 169600 },
-      { year: "2019", marketValue: 167000 },
-      { year: "2020", marketValue: 169200 },
-      { year: "2021", marketValue: 169200 },
-      { year: "2022", marketValue: 169200 },
-      { year: "2023", marketValue: 185000 },
-      { year: "2024", marketValue: 185000 },
-      { year: "2025", marketValue: 306700 },
-      { year: "2026", marketValue: 306700 },
-    ],
-  },
-];
+const PROPERTY_LOOKUP_API_URL =
+  window.PROPERTY_LOOKUP_API_URL ||
+  new URLSearchParams(window.location.search).get("lookup_api_url") ||
+  "https://property-assessment-lookup-bl43esqwsa-uk.a.run.app";
 
-const TAX_YEAR_ASSESSMENT_BINS_URL =
-  "https://storage.googleapis.com/musa5090s26-team1-public/configs/tax_year_assessment_bins.json";
-const MAIN_DISPLAY_MAX = 2500000;
-const MAIN_DISPLAY_BIN_SIZE = 100000;
-const OVERFLOW_LABEL = ">$2.5M";
-const RANGE_SEPARATOR = "-";
-
-const DEFAULT_VIEW = {
-  lat: 39.9526,
-  lng: -75.1652,
-  zoom: 12,
-};
+let assessmentHistoryChart = null;
 
 let map = null;
 let marker = null;
@@ -41,80 +11,163 @@ let assessmentHistoryChart = null;
 let latestAssessmentChart = null;
 
 function formatMoney(value) {
+  const number = Number(value);
+
+  if (!Number.isFinite(number)) {
+    return "Not available";
+  }
+
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
     maximumFractionDigits: 0,
-  }).format(value);
+  }).format(number);
 }
 
 function formatCompactCurrency(value) {
+  const number = Number(value);
+
+  if (!Number.isFinite(number)) {
+    return "-";
+  }
+
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
     notation: "compact",
     maximumFractionDigits: 1,
-  }).format(value);
+  }).format(number);
 }
 
-function formatNumber(value) {
-  return new Intl.NumberFormat("en-US").format(value);
+function formatPercent(value) {
+  const number = Number(value);
+
+  if (!Number.isFinite(number)) {
+    return "Not available";
+  }
+
+  return new Intl.NumberFormat("en-US", {
+    style: "percent",
+    maximumFractionDigits: 1,
+  }).format(number);
 }
 
-function initializeMap() {
-  map = L.map("map").setView(
-    [DEFAULT_VIEW.lat, DEFAULT_VIEW.lng],
-    DEFAULT_VIEW.zoom,
-  );
+function formatPercentile(value) {
+  const number = Number(value);
 
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: "&copy; OpenStreetMap contributors",
-  }).addTo(map);
+  if (!Number.isFinite(number)) {
+    return null;
+  }
+
+  const rounded = Math.round(number);
+  const suffix =
+    rounded % 100 >= 11 && rounded % 100 <= 13
+      ? "th"
+      : { 1: "st", 2: "nd", 3: "rd" }[rounded % 10] || "th";
+
+  return `${rounded}${suffix}`;
 }
 
-function setLookupMessage(message = "") {
-  document.getElementById("lookupMessage").textContent = message;
+function setLookupMessage(message = "", type = "neutral") {
+  const messageElement = document.getElementById("lookupMessage");
+  messageElement.textContent = message;
+  messageElement.dataset.type = type;
 }
 
-function updateMap(property) {
-  if (!map) {
+function setLoading(isLoading) {
+  const button = document.getElementById("searchBtn");
+  const input = document.getElementById("opaIdInput");
+
+  button.disabled = isLoading;
+  input.disabled = isLoading;
+  button.textContent = isLoading ? "Looking up..." : "Look up";
+}
+
+function showEmptyState() {
+  document.getElementById("emptyState").hidden = false;
+  document.getElementById("resultPanel").hidden = true;
+}
+
+function showResultState() {
+  document.getElementById("emptyState").hidden = true;
+  document.getElementById("resultPanel").hidden = false;
+}
+
+function formatOfficialChange(official) {
+  if (
+    official.prior_tax_year === null ||
+    official.prior_tax_year === undefined ||
+    official.prior_assessed_value === null ||
+    official.prior_assessed_value === undefined ||
+    official.change_pct === null ||
+    official.change_pct === undefined
+  ) {
+    return {
+      className: "change-neutral",
+      text: "Prior-year comparison is not available.",
+    };
+  }
+
+  const prior = formatMoney(official.prior_assessed_value);
+  const changePct = Number(official.change_pct);
+
+  if (changePct === 0) {
+    return {
+      className: "change-neutral",
+      text: `— No change from Tax Year ${official.prior_tax_year} (${prior}).`,
+    };
+  }
+
+  const direction = changePct > 0 ? "increase" : "decrease";
+  const symbol = changePct > 0 ? "▲" : "▼";
+  const className = changePct > 0 ? "change-positive" : "change-negative";
+
+  return {
+    className,
+    text: `${symbol} ${formatPercent(Math.abs(changePct))} ${direction} from Tax Year ${official.prior_tax_year} (${prior}).`,
+  };
+}
+
+function formatEstimateGap(estimate) {
+  if (
+    estimate.gap_value === null ||
+    estimate.gap_value === undefined ||
+    estimate.gap_pct === null ||
+    estimate.gap_pct === undefined
+  ) {
+    return "Comparison with the official value is not available.";
+  }
+
+  const direction = estimate.gap_value >= 0 ? "above" : "below";
+  return `${formatMoney(Math.abs(estimate.gap_value))} ${direction} the current official assessed value (${formatPercent(Math.abs(estimate.gap_pct))}).`;
+}
+
+function destroyHistoryChart() {
+  if (assessmentHistoryChart) {
+    assessmentHistoryChart.destroy();
+    assessmentHistoryChart = null;
+  }
+}
+
+function renderHistoryChart(history) {
+  const chartElement = document.getElementById("assessmentHistoryChart");
+  destroyHistoryChart();
+
+  if (!window.ApexCharts) {
+    chartElement.textContent = "Assessment history chart library failed to load.";
     return;
   }
 
-  map.setView([property.lat, property.lng], 15);
-
-  if (marker) {
-    map.removeLayer(marker);
+  if (!Array.isArray(history) || history.length === 0) {
+    chartElement.textContent = "No official assessment history is available.";
+    return;
   }
 
-  marker = L.marker([property.lat, property.lng])
-    .addTo(map)
-    .bindPopup(`${property.address}<br>OPA ID: ${property.propertyId}`)
-    .openPopup();
-}
-
-function renderSummary(property) {
-  const latest = property.history[property.history.length - 1];
-
-  document.getElementById("opaIdText").textContent = property.propertyId;
-  document.getElementById("addressText").textContent = property.address;
-  document.getElementById("currentValueText").textContent = formatMoney(
-    latest.marketValue,
-  );
-  document.getElementById("taxYearText").textContent = latest.year;
-  document.getElementById("neighborhoodText").textContent = property.neighborhood;
-}
-
-function renderAssessmentHistory(property) {
-  const chartElement = document.getElementById("assessmentHistoryChart");
-
-  if (assessmentHistoryChart) {
-    assessmentHistoryChart.destroy();
-  }
+  chartElement.textContent = "";
 
   assessmentHistoryChart = new window.ApexCharts(chartElement, {
     chart: {
-      type: "bar",
+      type: "line",
       height: 300,
       width: "100%",
       parentHeightOffset: 0,
@@ -124,18 +177,21 @@ function renderAssessmentHistory(property) {
     },
     series: [
       {
-        name: "Assessed value",
-        data: property.history.map((item) => Number(item.marketValue)),
+        name: "Official assessed value",
+        data: history.map((item) => Number(item.assessed_value)),
       },
     ],
-    colors: ["#0d3b66"],
-    fill: {
-      type: "solid",
-      opacity: 1,
+    colors: ["#1f5f99"],
+    stroke: {
+      width: 3,
+      curve: "straight",
+    },
+    markers: {
+      size: 4,
     },
     plotOptions: {
       bar: {
-        borderRadius: 4,
+        borderRadius: 3,
         columnWidth: "58%",
       },
     },
@@ -143,25 +199,23 @@ function renderAssessmentHistory(property) {
       enabled: false,
     },
     grid: {
-      borderColor: "#e5e7eb",
+      borderColor: "#d9dde5",
+      strokeDashArray: 3,
       padding: {
         left: 10,
         right: 12,
-        top: 6,
+        top: 8,
         bottom: 0,
       },
-      strokeDashArray: 4,
     },
     xaxis: {
-      categories: property.history.map((item) => item.year),
+      categories: history.map((item) => String(item.tax_year)),
       title: {
         text: "Tax year",
       },
       labels: {
         rotate: -45,
-        rotateAlways: false,
         trim: false,
-        hideOverlappingLabels: false,
         style: {
           fontSize: "11px",
         },
@@ -169,7 +223,7 @@ function renderAssessmentHistory(property) {
     },
     yaxis: {
       title: {
-        text: "Assessed value",
+        text: "Official assessed value",
       },
       labels: {
         minWidth: 72,
@@ -179,283 +233,122 @@ function renderAssessmentHistory(property) {
     tooltip: {
       x: {
         formatter: (_value, { dataPointIndex }) =>
-          `Tax year ${property.history[dataPointIndex].year}`,
+          `Tax Year ${history[dataPointIndex].tax_year}`,
       },
       y: {
         formatter: (value) => formatMoney(value),
-        title: {
-          formatter: () => "Assessed value:",
-        },
       },
     },
-    responsive: [
-      {
-        breakpoint: 760,
-        options: {
-          chart: {
-            height: 320,
-          },
-          plotOptions: {
-            bar: {
-              columnWidth: "66%",
-            },
-          },
-        },
-      },
-    ],
   });
 
   assessmentHistoryChart.render();
 }
 
-function renderProperty(property) {
-  renderSummary(property);
-  renderAssessmentHistory(property);
-  updateMap(property);
+function renderProperty(payload) {
+  const property = payload.property || {};
+  const official = payload.official || {};
+  const estimate = payload.estimate || {};
+  const context = payload.context || {};
+  const citywideOfficialPercentile = formatPercentile(
+    context.citywide?.official_percentile,
+  );
+  const zipOfficialPercentile = formatPercentile(
+    context.zip?.official_percentile,
+  );
+
+  document.getElementById("property-heading").textContent =
+    property.address || "Address not available";
+  document.getElementById("propertyIdText").textContent =
+    property.property_id || "Not available";
+  document.getElementById("propertyTypeText").textContent =
+    property.property_type || "Not available";
+
+  document.getElementById("officialValueText").textContent = formatMoney(
+    official.latest_assessed_value,
+  );
+  document.getElementById("officialYearText").textContent =
+    official.latest_tax_year !== null && official.latest_tax_year !== undefined
+      ? `Tax Year ${official.latest_tax_year}`
+      : "Tax Year not available";
+  const officialChange = formatOfficialChange(official);
+  const officialChangeElement = document.getElementById("officialChangeText");
+  officialChangeElement.className = `change-text ${officialChange.className}`;
+  officialChangeElement.textContent = officialChange.text;
+
+  document.getElementById("contextCard").hidden =
+    !citywideOfficialPercentile && !zipOfficialPercentile;
+  document.getElementById("citywideContextRow").hidden =
+    !citywideOfficialPercentile;
+  document.getElementById("zipContextRow").hidden =
+    !zipOfficialPercentile || !context.zip;
+  document.getElementById("citywideContextValue").textContent =
+    citywideOfficialPercentile || "-";
+  document.getElementById("zipContextValue").textContent =
+    zipOfficialPercentile || "-";
+  document.getElementById("zipContextHelper").textContent = context.zip
+    ? `in ${context.zip.label}`
+    : "";
+
+  document.getElementById("estimateValueText").textContent = formatMoney(
+    estimate.estimated_current_market_value,
+  );
+  document.getElementById("estimateGapText").textContent =
+    formatEstimateGap(estimate);
+
+  const estimatedAt = estimate.predicted_at
+    ? ` Estimate generated ${new Date(estimate.predicted_at).toLocaleDateString()}.`
+    : "";
+  document.getElementById("sourceNoteText").textContent =
+    `Sources: Philadelphia OPA assessment records and CAMA model output.${estimatedAt}`;
+
+  renderHistoryChart(payload.history || []);
+  showResultState();
 }
 
-function lookupProperty() {
-  const opaId = document.getElementById("opaIdInput").value.trim();
-  const property = SAMPLE_PROPERTIES.find((item) => item.propertyId === opaId);
+async function lookupProperty() {
+  const propertyId = document.getElementById("opaIdInput").value.trim();
 
-  if (!property) {
-    setLookupMessage("OPA ID not found in sample data. Try 502244720.");
+  if (!propertyId) {
+    setLookupMessage("Enter an OPA ID or property ID to continue.", "error");
     return;
   }
 
-  setLookupMessage("");
-  renderProperty(property);
-}
+  setLoading(true);
+  setLookupMessage("Looking up property record...", "neutral");
 
-function setChartError(message = "") {
-  const errorElement = document.getElementById("latest-assessment-chart-error");
-  errorElement.textContent = message;
-  errorElement.style.display = message ? "block" : "none";
-}
-
-function setChartHelperText(message) {
-  document.getElementById("latest-assessment-chart-helper").textContent = message;
-}
-
-function destroyLatestAssessmentChart() {
-  if (latestAssessmentChart) {
-    latestAssessmentChart.destroy();
-    latestAssessmentChart = null;
-  }
-}
-
-function buildDisplayBins(rows) {
-  const bins = [];
-  let lowerBound = 0;
-
-  while (lowerBound < MAIN_DISPLAY_MAX) {
-    bins.push({
-      lowerBound,
-      upperBound: lowerBound + MAIN_DISPLAY_BIN_SIZE,
-      propertyCount: 0,
-      label: "",
-      tooltipLabel: "",
-      isOverflow: false,
-    });
-    lowerBound += MAIN_DISPLAY_BIN_SIZE;
-  }
-
-  bins.push({
-    lowerBound: MAIN_DISPLAY_MAX,
-    upperBound: null,
-    propertyCount: 0,
-    label: OVERFLOW_LABEL,
-    tooltipLabel: `>${formatMoney(MAIN_DISPLAY_MAX)}`,
-    isOverflow: true,
-  });
-
-  for (const row of rows) {
-    if (row.lowerBound >= MAIN_DISPLAY_MAX || row.upperBound > MAIN_DISPLAY_MAX) {
-      bins[bins.length - 1].propertyCount += row.propertyCount;
-      continue;
-    }
-
-    const index = Math.floor(row.lowerBound / MAIN_DISPLAY_BIN_SIZE);
-    if (bins[index]) {
-      bins[index].propertyCount += row.propertyCount;
-    }
-  }
-
-  for (const bin of bins) {
-    if (bin.isOverflow) {
-      continue;
-    }
-
-    bin.tooltipLabel = `${formatMoney(bin.lowerBound)} ${RANGE_SEPARATOR} ${formatMoney(bin.upperBound - 1)}`;
-
-    if (bin.lowerBound === 0) {
-      bin.label = "$0";
-    } else if (bin.lowerBound % 500000 === 0) {
-      bin.label = formatCompactCurrency(bin.lowerBound);
-    } else {
-      bin.label = "";
-    }
-  }
-
-  return bins;
-}
-
-function renderLatestAssessmentChart(rows, latestTaxYear) {
-  const chartElement = document.getElementById("latest-assessment-chart");
-  const categories = rows.map((row) => row.label);
-  const seriesData = rows.map((row) => ({
-    x: row.label,
-    y: row.propertyCount,
-  }));
-
-  destroyLatestAssessmentChart();
-  setChartError("");
-  setChartHelperText(
-    `Latest tax year (${latestTaxYear}) distribution. Main range shown up to $2.5M; higher values grouped into an overflow bin.`,
-  );
-
-  latestAssessmentChart = new window.ApexCharts(chartElement, {
-    chart: {
-      type: "bar",
-      height: 340,
-      toolbar: {
-        show: false,
-      },
-      animations: {
-        easing: "easeinout",
-        speed: 350,
-      },
-    },
-    series: [
-      {
-        name: "Properties",
-        data: seriesData,
-      },
-    ],
-    colors: ["#0d3b66"],
-    plotOptions: {
-      bar: {
-        borderRadius: 4,
-        columnWidth: "86%",
-      },
-    },
-    dataLabels: {
-      enabled: false,
-    },
-    legend: {
-      show: false,
-    },
-    grid: {
-      borderColor: "#e5e7eb",
-      strokeDashArray: 4,
-    },
-    xaxis: {
-      categories,
-      tickPlacement: "between",
-      labels: {
-        rotate: 0,
-        trim: false,
-        hideOverlappingLabels: true,
-      },
-      title: {
-        text: "Assessed value range",
-      },
-    },
-    yaxis: {
-      title: {
-        text: "Property count",
-      },
-      labels: {
-        formatter: (value) => formatNumber(Math.round(value)),
-      },
-    },
-    tooltip: {
-      x: {
-        formatter: (_value, { dataPointIndex }) => rows[dataPointIndex].tooltipLabel,
-      },
-      y: {
-        formatter: (value) => `${formatNumber(value)} properties`,
-      },
-    },
-  });
-
-  latestAssessmentChart.render();
-}
-
-async function loadLatestAssessmentChart() {
   try {
-    setChartError("");
-    setChartHelperText("Loading citywide assessment distribution...");
+    const url = new URL(PROPERTY_LOOKUP_API_URL, window.location.origin);
+    url.searchParams.set("property_id", propertyId);
 
-    if (!window.ApexCharts) {
-      throw new Error("Assessment chart library failed to load.");
-    }
-
-    const response = await fetch(TAX_YEAR_ASSESSMENT_BINS_URL);
-    if (!response.ok) {
-      throw new Error(`Unable to load assessment chart data (${response.status}).`);
-    }
-
+    const response = await fetch(url);
     const payload = await response.json();
-    if (!Array.isArray(payload) || payload.length === 0) {
-      destroyLatestAssessmentChart();
-      setChartError("No assessment distribution data is available right now.");
+
+    if (!response.ok || !payload.ok) {
+      destroyHistoryChart();
+      showEmptyState();
+      setLookupMessage(payload.error || "Property lookup failed.", "error");
       return;
     }
 
-    const taxYears = payload
-      .map((row) => Number(row.tax_year))
-      .filter((taxYear) => Number.isFinite(taxYear));
-
-    if (taxYears.length === 0) {
-      destroyLatestAssessmentChart();
-      setChartError("Assessment distribution data is missing tax year values.");
-      return;
-    }
-
-    const latestTaxYear = Math.max(...taxYears);
-    const latestRows = payload
-      .filter((row) => Number(row.tax_year) === latestTaxYear)
-      .map((row) => ({
-        lowerBound: Number(row.lower_bound),
-        upperBound: Number(row.upper_bound),
-        propertyCount: Number(row.property_count),
-      }))
-      .filter(
-        (row) =>
-          Number.isFinite(row.lowerBound) &&
-          Number.isFinite(row.upperBound) &&
-          Number.isFinite(row.propertyCount),
-      )
-      .sort((left, right) => left.lowerBound - right.lowerBound);
-
-    if (latestRows.length === 0) {
-      destroyLatestAssessmentChart();
-      setChartError(
-        `No assessment distribution bins were found for tax year ${latestTaxYear}.`,
-      );
-      return;
-    }
-
-    renderLatestAssessmentChart(buildDisplayBins(latestRows), latestTaxYear);
+    renderProperty(payload);
+    setLookupMessage("Property record loaded.", "success");
   } catch (error) {
-    destroyLatestAssessmentChart();
-    setChartError(
+    destroyHistoryChart();
+    showEmptyState();
+    setLookupMessage(
       error instanceof Error
         ? error.message
-        : "Unable to load the latest assessment distribution chart.",
+        : "Unable to load the property record right now.",
+      "error",
     );
+  } finally {
+    setLoading(false);
   }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const sampleProperty = SAMPLE_PROPERTIES[0];
+  showEmptyState();
 
-  initializeMap();
-  renderProperty(sampleProperty);
-  loadLatestAssessmentChart();
-
-  document.getElementById("opaIdInput").value = sampleProperty.propertyId;
   document.getElementById("searchBtn").addEventListener("click", lookupProperty);
   document.getElementById("opaIdInput").addEventListener("keydown", (event) => {
     if (event.key === "Enter") {

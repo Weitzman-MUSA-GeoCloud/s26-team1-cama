@@ -1,355 +1,1111 @@
-const predictedValueBins = [
-  { lowerBound: 0, upperBound: 10000, propertyCount: 1339 },
-  { lowerBound: 10000, upperBound: 20000, propertyCount: 35665 },
-  { lowerBound: 20000, upperBound: 30000, propertyCount: 38318 },
-  { lowerBound: 30000, upperBound: 40000, propertyCount: 32196 },
-  { lowerBound: 40000, upperBound: 50000, propertyCount: 31308 },
-  { lowerBound: 50000, upperBound: 60000, propertyCount: 31036 },
-  { lowerBound: 60000, upperBound: 70000, propertyCount: 28720 },
-  { lowerBound: 70000, upperBound: 80000, propertyCount: 26311 },
-  { lowerBound: 80000, upperBound: 90000, propertyCount: 24727 },
-  { lowerBound: 90000, upperBound: 100000, propertyCount: 20356 },
-  { lowerBound: 100000, upperBound: 110000, propertyCount: 23083 },
-  { lowerBound: 110000, upperBound: 120000, propertyCount: 20659 },
-  { lowerBound: 120000, upperBound: 130000, propertyCount: 14872 },
-  { lowerBound: 130000, upperBound: 140000, propertyCount: 11732 },
-  { lowerBound: 140000, upperBound: 150000, propertyCount: 18632 },
-  { lowerBound: 150000, upperBound: 160000, propertyCount: 11185 },
-  { lowerBound: 160000, upperBound: 170000, propertyCount: 15253 },
-  { lowerBound: 170000, upperBound: 180000, propertyCount: 7702 },
-  { lowerBound: 180000, upperBound: 190000, propertyCount: 7315 },
-  { lowerBound: 190000, upperBound: 200000, propertyCount: 9517 },
-  { lowerBound: 200000, upperBound: 210000, propertyCount: 6613 },
-  { lowerBound: 210000, upperBound: 220000, propertyCount: 7910 },
-  { lowerBound: 220000, upperBound: 230000, propertyCount: 4909 },
-  { lowerBound: 230000, upperBound: 240000, propertyCount: 5516 },
-  { lowerBound: 240000, upperBound: 250000, propertyCount: 4203 },
-  { lowerBound: 250000, upperBound: 260000, propertyCount: 3942 },
-  { lowerBound: 260000, upperBound: 270000, propertyCount: 3463 },
-  { lowerBound: 270000, upperBound: 280000, propertyCount: 3456 },
-  { lowerBound: 280000, upperBound: 290000, propertyCount: 3090 },
-  { lowerBound: 290000, upperBound: 300000, propertyCount: 2884 },
-  { lowerBound: 300000, upperBound: 310000, propertyCount: 2834 },
-  { lowerBound: 310000, upperBound: 320000, propertyCount: 2842 },
-  { lowerBound: 320000, upperBound: 330000, propertyCount: 2070 },
-  { lowerBound: 330000, upperBound: 340000, propertyCount: 2653 },
-  { lowerBound: 340000, upperBound: 350000, propertyCount: 2395 },
-  { lowerBound: 350000, upperBound: 360000, propertyCount: 2391 },
-  { lowerBound: 360000, upperBound: 370000, propertyCount: 2017 },
-  { lowerBound: 370000, upperBound: 380000, propertyCount: 2373 },
-  { lowerBound: 380000, upperBound: 390000, propertyCount: 1686 },
-  { lowerBound: 390000, upperBound: 400000, propertyCount: 1951 },
-  { lowerBound: 400000, upperBound: 410000, propertyCount: 1187 },
-  { lowerBound: 410000, upperBound: 420000, propertyCount: 1715 },
-  { lowerBound: 420000, upperBound: 430000, propertyCount: 1376 },
-  { lowerBound: 430000, upperBound: 440000, propertyCount: 1191 },
-  { lowerBound: 440000, upperBound: 450000, propertyCount: 985 },
-  { lowerBound: 450000, upperBound: 460000, propertyCount: 794 },
-  { lowerBound: 460000, upperBound: 470000, propertyCount: 1444 },
-  { lowerBound: 470000, upperBound: 480000, propertyCount: 663 },
-  { lowerBound: 480000, upperBound: 490000, propertyCount: 920 },
-  { lowerBound: 490000, upperBound: 500000, propertyCount: 718 },
-  { lowerBound: 500000, upperBound: 510000, propertyCount: 982 },
-  { lowerBound: 510000, upperBound: 520000, propertyCount: 906 },
-  { lowerBound: 520000, upperBound: 530000, propertyCount: 921 },
-  { lowerBound: 530000, upperBound: 540000, propertyCount: 628 },
-  { lowerBound: 540000, upperBound: 550000, propertyCount: 977 },
-  { lowerBound: 550000, upperBound: 560000, propertyCount: 433 },
-  { lowerBound: 560000, upperBound: 570000, propertyCount: 262 },
-  { lowerBound: 570000, upperBound: 580000, propertyCount: 408 },
-  { lowerBound: 580000, upperBound: 590000, propertyCount: 310 },
-  { lowerBound: 590000, upperBound: 600000, propertyCount: 628 },
-  { lowerBound: 600000, upperBound: 610000, propertyCount: 374 },
-  { lowerBound: 610000, upperBound: 620000, propertyCount: 183 },
-  { lowerBound: 620000, upperBound: 630000, propertyCount: 158 },
-  { lowerBound: 630000, upperBound: 640000, propertyCount: 463 },
-  { lowerBound: 640000, upperBound: 650000, propertyCount: 190 },
-  { lowerBound: 650000, upperBound: 660000, propertyCount: 310 },
-  { lowerBound: 660000, upperBound: 670000, propertyCount: 112 },
-  { lowerBound: 670000, upperBound: 680000, propertyCount: 157 },
-  { lowerBound: 680000, upperBound: 690000, propertyCount: 311 },
-  { lowerBound: 690000, upperBound: 700000, propertyCount: 174 },
-  { lowerBound: 700000, upperBound: 710000, propertyCount: 167 },
-  { lowerBound: 710000, upperBound: 720000, propertyCount: 197 },
-  { lowerBound: 720000, upperBound: 730000, propertyCount: 117 },
-  { lowerBound: 730000, upperBound: 740000, propertyCount: 184 },
-  { lowerBound: 740000, upperBound: 750000, propertyCount: 217 },
-  { lowerBound: 750000, upperBound: 760000, propertyCount: 88 },
-  { lowerBound: 760000, upperBound: 770000, propertyCount: 236 },
-  { lowerBound: 770000, upperBound: 780000, propertyCount: 221 },
-  { lowerBound: 780000, upperBound: 790000, propertyCount: 110 },
-  { lowerBound: 790000, upperBound: 800000, propertyCount: 272 },
-  { lowerBound: 800000, upperBound: 810000, propertyCount: 218 },
-  { lowerBound: 810000, upperBound: 820000, propertyCount: 186 },
-  { lowerBound: 820000, upperBound: 830000, propertyCount: 445 },
-  { lowerBound: 830000, upperBound: 840000, propertyCount: 223 },
-  { lowerBound: 840000, upperBound: 850000, propertyCount: 174 },
-  { lowerBound: 850000, upperBound: 860000, propertyCount: 266 },
-  { lowerBound: 860000, upperBound: 870000, propertyCount: 159 },
-  { lowerBound: 870000, upperBound: 880000, propertyCount: 141 },
-  { lowerBound: 880000, upperBound: 890000, propertyCount: 95 },
-  { lowerBound: 890000, upperBound: 900000, propertyCount: 150 },
-  { lowerBound: 900000, upperBound: 910000, propertyCount: 337 },
-  { lowerBound: 910000, upperBound: 920000, propertyCount: 157 },
-  { lowerBound: 920000, upperBound: 930000, propertyCount: 92 },
-  { lowerBound: 930000, upperBound: 940000, propertyCount: 155 },
-  { lowerBound: 940000, upperBound: 950000, propertyCount: 52 },
-  { lowerBound: 950000, upperBound: 960000, propertyCount: 133 },
-  { lowerBound: 960000, upperBound: 970000, propertyCount: 187 },
-  { lowerBound: 970000, upperBound: 980000, propertyCount: 102 },
-  { lowerBound: 980000, upperBound: 990000, propertyCount: 151 },
-  { lowerBound: 990000, upperBound: 1000000, propertyCount: 160 },
-  { lowerBound: 1000000, upperBound: 1010000, propertyCount: 89 },
-  { lowerBound: 1010000, upperBound: 1020000, propertyCount: 82 },
-  { lowerBound: 1020000, upperBound: 1030000, propertyCount: 166 },
-  { lowerBound: 1030000, upperBound: 1040000, propertyCount: 114 },
-  { lowerBound: 1040000, upperBound: 1050000, propertyCount: 246 },
-  { lowerBound: 1050000, upperBound: 1060000, propertyCount: 74 },
-  { lowerBound: 1060000, upperBound: 1070000, propertyCount: 85 },
-  { lowerBound: 1070000, upperBound: 1080000, propertyCount: 129 },
-  { lowerBound: 1080000, upperBound: 1090000, propertyCount: 60 },
-  { lowerBound: 1090000, upperBound: 1100000, propertyCount: 107 },
-  { lowerBound: 1100000, upperBound: 1110000, propertyCount: 43 },
-  { lowerBound: 1110000, upperBound: 1120000, propertyCount: 18 },
-  { lowerBound: 1120000, upperBound: 1130000, propertyCount: 47 },
-  { lowerBound: 1130000, upperBound: 1140000, propertyCount: 376 },
-  { lowerBound: 1140000, upperBound: 1150000, propertyCount: 86 },
-  { lowerBound: 1150000, upperBound: 1160000, propertyCount: 43 },
-  { lowerBound: 1160000, upperBound: 1170000, propertyCount: 29 },
-  { lowerBound: 1170000, upperBound: 1180000, propertyCount: 72 },
-  { lowerBound: 1180000, upperBound: 1190000, propertyCount: 32 },
-  { lowerBound: 1190000, upperBound: 1200000, propertyCount: 66 },
-  { lowerBound: 1200000, upperBound: 1210000, propertyCount: 20 },
-  { lowerBound: 1210000, upperBound: 1220000, propertyCount: 53 },
-  { lowerBound: 1220000, upperBound: 1230000, propertyCount: 36 },
-  { lowerBound: 1230000, upperBound: 1240000, propertyCount: 25 },
-  { lowerBound: 1240000, upperBound: 1250000, propertyCount: 64 },
-  { lowerBound: 1250000, upperBound: 1260000, propertyCount: 12 },
-  { lowerBound: 1260000, upperBound: 1270000, propertyCount: 2 },
-  { lowerBound: 1270000, upperBound: 1280000, propertyCount: 24 },
-  { lowerBound: 1280000, upperBound: 1290000, propertyCount: 32 },
-  { lowerBound: 1290000, upperBound: 1300000, propertyCount: 37 },
-  { lowerBound: 1300000, upperBound: 1310000, propertyCount: 60 },
-  { lowerBound: 1320000, upperBound: 1330000, propertyCount: 28 },
-  { lowerBound: 1330000, upperBound: 1340000, propertyCount: 41 },
-  { lowerBound: 1340000, upperBound: 1350000, propertyCount: 28 },
-  { lowerBound: 1350000, upperBound: 1360000, propertyCount: 5 },
-  { lowerBound: 1360000, upperBound: 1370000, propertyCount: 6 },
-  { lowerBound: 1370000, upperBound: 1380000, propertyCount: 2 },
-  { lowerBound: 1380000, upperBound: 1390000, propertyCount: 4 },
-  { lowerBound: 1390000, upperBound: 1400000, propertyCount: 3 },
-  { lowerBound: 1400000, upperBound: 1410000, propertyCount: 25 },
-  { lowerBound: 1410000, upperBound: 1420000, propertyCount: 4 },
-  { lowerBound: 1420000, upperBound: 1430000, propertyCount: 18 },
-  { lowerBound: 1430000, upperBound: 1440000, propertyCount: 6 },
-  { lowerBound: 1440000, upperBound: 1450000, propertyCount: 104 },
-  { lowerBound: 1450000, upperBound: 1460000, propertyCount: 34 },
-  { lowerBound: 1460000, upperBound: 1470000, propertyCount: 24 },
-  { lowerBound: 1480000, upperBound: 1490000, propertyCount: 3 },
-  { lowerBound: 1490000, upperBound: 1500000, propertyCount: 16 },
-  { lowerBound: 1510000, upperBound: 1520000, propertyCount: 12 },
-  { lowerBound: 1540000, upperBound: 1550000, propertyCount: 1 },
-  { lowerBound: 1550000, upperBound: 1560000, propertyCount: 13 },
-  { lowerBound: 1580000, upperBound: 1590000, propertyCount: 11 },
-  { lowerBound: 1610000, upperBound: 1620000, propertyCount: 3 },
-  { lowerBound: 1620000, upperBound: 1630000, propertyCount: 18 },
-  { lowerBound: 1640000, upperBound: 1650000, propertyCount: 7 },
-  { lowerBound: 1660000, upperBound: 1670000, propertyCount: 22 },
-  { lowerBound: 1680000, upperBound: 1690000, propertyCount: 7 },
-  { lowerBound: 1720000, upperBound: 1730000, propertyCount: 1 },
-  { lowerBound: 1730000, upperBound: 1740000, propertyCount: 20 },
-  { lowerBound: 1790000, upperBound: 1800000, propertyCount: 5 },
-];
+const PUBLIC_BASE_URL =
+  "https://storage.googleapis.com/musa5090s26-team1-public";
+const MAP_STYLE_METADATA_URL = `${PUBLIC_BASE_URL}/configs/map_style_metadata.json`;
+const TAX_YEAR_ASSESSMENT_BINS_URL = `${PUBLIC_BASE_URL}/configs/tax_year_assessment_bins.json`;
+const CURRENT_ASSESSMENT_BINS_URL = `${PUBLIC_BASE_URL}/configs/current_assessment_bins.json`;
+const ZIP_ASSESSMENT_CONTEXT_URL = `${PUBLIC_BASE_URL}/configs/zip_assessment_context.json`;
+const PROPERTY_LOOKUP_API_URL =
+  window.PROPERTY_LOOKUP_API_URL ||
+  new URLSearchParams(window.location.search).get("lookup_api_url") ||
+  "https://property-assessment-lookup-bl43esqwsa-uk.a.run.app";
 
-const map = L.map("map").setView([40.04, -75.28], 12);
+const DEFAULT_TILE_URL = `${PUBLIC_BASE_URL}/tiles/properties/{z}/{x}/{y}.pbf`;
+const DEFAULT_TILE_LAYER = "property_tile_info";
+const MAIN_DISPLAY_MAX = 2500000;
+const MAIN_DISPLAY_BIN_SIZE = 100000;
+const VALUE_COLORS = [
+  "#dbeafe",
+  "#bfdbfe",
+  "#93c5fd",
+  "#60a5fa",
+  "#3b82f6",
+  "#2563eb",
+  "#1e3a8a",
+];
+const GAP_UNAVAILABLE_COLOR = "#d9dde5";
+const GAP_BINS = [
+  { max: -75, label: "&le; -75%", color: "#53627f" },
+  { min: -75, max: -50, label: "-75% to -50%", color: "#7183a3" },
+  { min: -50, max: -25, label: "-50% to -25%", color: "#a7b2c7" },
+  { min: -25, max: 25, label: "-25% to +25%", color: "#e5e7eb" },
+  { min: 25, max: 50, label: "+25% to +50%", color: "#d6b071" },
+  { min: 50, max: 75, label: "+50% to +75%", color: "#b9793f" },
+  { min: 75, label: "&gt; +75%", color: "#87552c" },
+];
+const ZIP_FOCUS_ZOOM = 16;
+const ZIP_CENTERS = {
+  19102: [39.9522, -75.1659],
+  19103: [39.9526, -75.174],
+  19104: [39.9584, -75.2022],
+  19106: [39.9487, -75.1458],
+  19107: [39.9488, -75.159],
+  19121: [39.9813, -75.1742],
+  19122: [39.9774, -75.1458],
+  19123: [39.9635, -75.148],
+  19125: [39.9789, -75.1251],
+  19130: [39.9681, -75.1719],
+  19134: [39.9919, -75.1128],
+  19140: [40.0117, -75.1456],
+  19143: [39.9449, -75.2264],
+  19145: [39.9138, -75.1842],
+  19146: [39.9395, -75.1796],
+  19147: [39.9367, -75.1547],
+  19148: [39.9202, -75.1596],
+};
+
+const map = L.map("map", {
+  zoomControl: true,
+}).setView([39.9526, -75.1652], 12);
 
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   attribution: "&copy; OpenStreetMap contributors",
 }).addTo(map);
 
-const propertyTileUrl =
-  "https://storage.googleapis.com/musa5090s26-team1-public/tiles/properties/{z}/{x}/{y}.pbf";
+let metadata = null;
+let zipContext = null;
+let activeMode = "official";
+let activeGeography = "citywide";
+let propertyTileLayer = null;
+let hoverPopup = null;
+let officialChart = null;
+let modelChart = null;
+let selectedHistoryChart = null;
+let legendControl = null;
+let citywideOfficialRows = [];
+let citywideModelRows = [];
+let selectedProperties = null;
+let selectedLookupPayload = null;
+let selectedZip = "";
+let activeValueBreaks = [];
+let breakCache = {
+  citywide: {},
+  zip: {},
+};
 
-const propertyTileLayerName = "property_tile_info";
+const modes = {
+  official: {
+    label: "Official Value",
+    description: "Showing official assessed value across residential parcels.",
+    field: "tax_year_assessed_value",
+    metadataField: "tax_year_assessed_value",
+    colors: VALUE_COLORS,
+  },
+  estimate: {
+    label: "Model Estimate",
+    description: "Showing model estimated current market value across residential parcels.",
+    field: "current_assessed_value",
+    metadataField: "current_assessed_value",
+    colors: VALUE_COLORS,
+  },
+  gap: {
+    label: "Gap (%)",
+    description: "Showing percent difference between model estimate and official value.",
+    field: "gap_pct",
+    metadataField: "percent_change",
+    colors: GAP_BINS.map((bin) => bin.color),
+  },
+};
 
-function getAssessmentColor(value) {
-  const numericValue = Number(value);
+function formatMoney(value) {
+  const number = Number(value);
 
-  if (!Number.isFinite(numericValue)) {
-    return "#d1d5db";
+  if (!Number.isFinite(number)) {
+    return "N/A";
   }
 
-  if (numericValue < 100000) {
-    return "#fee5d9";
-  }
-
-  if (numericValue < 250000) {
-    return "#fcae91";
-  }
-
-  if (numericValue < 500000) {
-    return "#fb6a4a";
-  }
-
-  if (numericValue < 750000) {
-    return "#de2d26";
-  }
-
-  if (numericValue < 1000000) {
-    return "#a50f15";
-  }
-
-  return "#67000d";
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(number);
 }
 
-console.log("VectorGrid available?", L.vectorGrid);
+function formatCompactMoney(value) {
+  const number = Number(value);
 
-const propertyTileLayer = L.vectorGrid.protobuf(propertyTileUrl, {
-  rendererFactory: L.canvas.tile,
-  interactive: true,
-  minZoom: 12,
-  maxZoom: 18,
-  maxNativeZoom: 18,
-  vectorTileLayerStyles: {
-    [propertyTileLayerName]: (properties) => {
-      console.log("property tile props", properties);
+  if (!Number.isFinite(number)) {
+    return "N/A";
+  }
 
-      return {
-        fill: true,
-        fillColor: getAssessmentColor(properties.current_assessed_value),
-        fillOpacity: 0.65,
-        color: "#ffffff",
-        opacity: 0.4,
-        weight: 0.5,
-      };
-    },
-  },
-});
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(number);
+}
 
-propertyTileLayer.on("click", (event) => {
-  const props = event.layer.properties;
+function formatNumber(value) {
+  const number = Number(value);
 
-  L.popup()
-    .setLatLng(event.latlng)
-    .setContent(`
-      <strong>${props.address || "Unknown address"}</strong><br>
-      Property ID: ${props.property_id || "N/A"}<br>
-      Current assessed value: ${
-        props.current_assessed_value
-          ? `$${Number(props.current_assessed_value).toLocaleString()}`
-          : "N/A"
-      }<br>
-      Tax year assessed value: ${
-        props.tax_year_assessed_value
-          ? `$${Number(props.tax_year_assessed_value).toLocaleString()}`
-          : "N/A"
-      }
-    `)
-    .openOn(map);
-});
+  if (!Number.isFinite(number)) {
+    return "N/A";
+  }
 
-propertyTileLayer.addTo(map);
+  return new Intl.NumberFormat("en-US").format(Math.round(number));
+}
 
-const neighborhoodPoints = [
-  {
-    name: "Center City",
-    lat: 39.9526,
-    lng: -75.1652,
-    valueBand: "$100k–$110k",
-  },
-  {
-    name: "University City",
-    lat: 39.9607,
-    lng: -75.1993,
-    valueBand: "$90k–$100k",
-  },
-  {
-    name: "West Philadelphia",
-    lat: 39.9651,
-    lng: -75.2217,
-    valueBand: "$70k–$80k",
-  },
-  {
-    name: "Fishtown",
-    lat: 39.9697,
-    lng: -75.1339,
-    valueBand: "$120k–$130k",
-  },
-];
+function formatPercentile(value) {
+  const number = Number(value);
 
-neighborhoodPoints.forEach((point) => {
-  L.circleMarker([point.lat, point.lng], {
-    radius: 9,
-    weight: 2,
-    color: "#ffffff",
-    fillColor: "#688898",
-    fillOpacity: 0.9,
-  })
-    .addTo(map)
-    .bindPopup(
-      `<strong>${point.name}</strong><br/>Predicted value band: ${point.valueBand}`,
+  if (!Number.isFinite(number)) {
+    return "-";
+  }
+
+  const rounded = Math.round(number);
+  const suffix =
+    rounded % 100 >= 11 && rounded % 100 <= 13
+      ? "th"
+      : { 1: "st", 2: "nd", 3: "rd" }[rounded % 10] || "th";
+
+  return `${rounded}${suffix}`;
+}
+
+function formatGapPercent(value) {
+  const number = Number(value);
+
+  if (!Number.isFinite(number)) {
+    return "Gap unavailable";
+  }
+
+  return `${new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  }).format(number)}%`;
+}
+
+function setStatus(message = "") {
+  document.getElementById("mapStatus").textContent = message;
+}
+
+function normalizeZip(value) {
+  return String(value ?? "").trim().slice(0, 5);
+}
+
+function getFeatureZip(properties) {
+  return normalizeZip(
+    properties.zip_code ?? properties.ZIP_CODE ?? properties.zip ?? properties.Zip,
+  );
+}
+
+function getTilePropertyValue(properties, modeName = activeMode) {
+  if (modeName === "gap") {
+    const official = Number(properties.tax_year_assessed_value);
+    const estimate = Number(properties.current_assessed_value);
+
+    if (
+      !Number.isFinite(official) ||
+      official < 10000 ||
+      !Number.isFinite(estimate)
+    ) {
+      return null;
+    }
+
+    return ((estimate - official) / official) * 100;
+  }
+
+  return Number(properties[modes[modeName].field]);
+}
+
+function computeWeightedQuantileBreaksFromBins(bins, classCount = 7) {
+  const rows = normalizeBinRows(bins).filter((row) => row.propertyCount > 0);
+  const total = rows.reduce((sum, row) => sum + row.propertyCount, 0);
+
+  if (rows.length === 0 || total === 0) {
+    return Array.from(
+      { length: classCount + 1 },
+      (_item, index) => index * 250000,
     );
-});
+  }
 
-function formatBinLabel(lower, upper) {
-  return `$${Math.round(lower / 1000)}k–$${Math.round(upper / 1000)}k`;
+  const breaks = [];
+
+  for (let index = 0; index <= classCount; index += 1) {
+    const target = (total * index) / classCount;
+    let cumulative = 0;
+    let threshold = rows[rows.length - 1].lowerBound;
+
+    for (const row of rows) {
+      const previous = cumulative;
+      cumulative += row.propertyCount;
+
+      if (cumulative >= target) {
+        const upperBound =
+          row.upperBound === null
+            ? row.lowerBound + MAIN_DISPLAY_BIN_SIZE
+            : row.upperBound;
+        const binShare =
+          row.propertyCount === 0 ? 0 : (target - previous) / row.propertyCount;
+        threshold = row.lowerBound + (upperBound - row.lowerBound) * binShare;
+        break;
+      }
+    }
+
+    breaks.push(Math.round(threshold));
+  }
+
+  return breaks.map((value, index) => {
+    if (index === 0) {
+      return value;
+    }
+
+    return Math.max(value, breaks[index - 1] + 1);
+  });
 }
 
-function formatYAxisValue(value) {
-  return Math.round(value).toLocaleString();
+function getChoroplethBins(modeName = activeMode) {
+  return getRowsForBreaks(modeName, activeGeography);
 }
 
-function renderDistributionHistogram(data) {
-  const container = document.getElementById("distributionChart");
-  const yAxis = document.getElementById("distributionYAxis");
+function getRowsForBreaks(modeName, geography) {
+  const fallbackRows =
+    modeName === "estimate" ? citywideModelRows : citywideOfficialRows;
 
-  if (!container || !yAxis) {
+  if (geography === "citywide") {
+    return fallbackRows;
+  }
+
+  const area = zipContext?.areas?.[normalizeZip(geography)];
+  const rows =
+    modeName === "estimate"
+      ? normalizeBinRows(area?.model?.bins || [])
+      : normalizeBinRows(area?.official?.bins || []);
+
+  return rows.length > 0 ? rows : fallbackRows;
+}
+
+function getCachedBreaks(modeName, geography) {
+  if (modeName === "gap") {
+    return [];
+  }
+
+  if (geography === "citywide") {
+    if (!breakCache.citywide[modeName]) {
+      breakCache.citywide[modeName] = computeWeightedQuantileBreaksFromBins(
+        getRowsForBreaks(modeName, "citywide"),
+        VALUE_COLORS.length,
+      );
+    }
+
+    return breakCache.citywide[modeName];
+  }
+
+  const zipCode = normalizeZip(geography);
+  breakCache.zip[zipCode] = breakCache.zip[zipCode] || {};
+
+  if (!breakCache.zip[zipCode][modeName]) {
+    breakCache.zip[zipCode][modeName] = computeWeightedQuantileBreaksFromBins(
+      getRowsForBreaks(modeName, zipCode),
+      VALUE_COLORS.length,
+    );
+  }
+
+  return breakCache.zip[zipCode][modeName];
+}
+
+function updateActiveStyleState() {
+  selectedZip = activeGeography === "citywide" ? "" : normalizeZip(activeGeography);
+  activeValueBreaks = getCachedBreaks(activeMode, activeGeography);
+}
+
+function resetBreakCache() {
+  breakCache = {
+    citywide: {},
+    zip: {},
+  };
+}
+
+function getGapBin(value) {
+  const number = Number(value);
+
+  if (!Number.isFinite(number)) {
+    return null;
+  }
+
+  return GAP_BINS.find((bin) => {
+    const aboveMin = bin.min === undefined || number > bin.min;
+    const belowMax = bin.max === undefined || number <= bin.max;
+    return aboveMin && belowMax;
+  });
+}
+
+function getColor(value, modeName = activeMode) {
+  const number = Number(value);
+  const mode = modes[modeName];
+
+  if (modeName === "gap") {
+    const gapBin = getGapBin(number);
+    return gapBin ? gapBin.color : GAP_UNAVAILABLE_COLOR;
+  }
+
+  const classBreaks = modeName === activeMode ? activeValueBreaks : [];
+
+  if (!Number.isFinite(number)) {
+    return "#cfd6df";
+  }
+
+  if (classBreaks.length < 2) {
+    return mode.colors[Math.floor(mode.colors.length / 2)];
+  }
+
+  let index = 0;
+  for (let i = 1; i < classBreaks.length - 1; i += 1) {
+    if (number >= classBreaks[i]) {
+      index = i;
+    }
+  }
+
+  return mode.colors[Math.min(index, mode.colors.length - 1)];
+}
+
+function styleFeature(properties) {
+  const value = getTilePropertyValue(properties);
+  const outsideSelectedZip = selectedZip && getFeatureZip(properties) !== selectedZip;
+  const gapUnavailable = activeMode === "gap" && !Number.isFinite(Number(value));
+
+  if (outsideSelectedZip) {
+    return {
+      fill: true,
+      fillColor: "#ffffff",
+      fillOpacity: 0,
+      color: "#ffffff",
+      opacity: 0,
+      weight: 0,
+    };
+  }
+
+  return {
+    fill: true,
+    fillColor: getColor(value),
+    fillOpacity: gapUnavailable ? 0.2 : 0.72,
+    color: "#ffffff",
+    opacity: 0.35,
+    weight: 0.45,
+  };
+}
+
+function formatModeValue(value, modeName = activeMode) {
+  return modeName === "gap" ? formatGapPercent(value) : formatMoney(value);
+}
+
+function getTileConfig() {
+  return {
+    url: metadata?.vector_tiles?.url_template || DEFAULT_TILE_URL,
+    sourceLayer: metadata?.vector_tiles?.source_layer || DEFAULT_TILE_LAYER,
+    minzoom: Number(metadata?.vector_tiles?.minzoom) || 12,
+    maxzoom: Number(metadata?.vector_tiles?.maxzoom) || 18,
+  };
+}
+
+function getZipBounds(zipCode) {
+  const bounds = zipContext?.areas?.[zipCode]?.bounds;
+
+  if (Array.isArray(bounds) && bounds.length === 2) {
+    return L.latLngBounds(bounds);
+  }
+
+  if (
+    bounds &&
+    Number.isFinite(Number(bounds.south)) &&
+    Number.isFinite(Number(bounds.west)) &&
+    Number.isFinite(Number(bounds.north)) &&
+    Number.isFinite(Number(bounds.east))
+  ) {
+    return L.latLngBounds(
+      [Number(bounds.south), Number(bounds.west)],
+      [Number(bounds.north), Number(bounds.east)],
+    );
+  }
+
+  return null;
+}
+
+function getZipCenter(zipCode) {
+  const center = zipContext?.areas?.[zipCode]?.center;
+
+  if (Array.isArray(center) && center.length === 2) {
+    return [Number(center[0]), Number(center[1])];
+  }
+
+  if (
+    center &&
+    Number.isFinite(Number(center.lat)) &&
+    Number.isFinite(Number(center.lng))
+  ) {
+    return [Number(center.lat), Number(center.lng)];
+  }
+
+  return ZIP_CENTERS[zipCode] || null;
+}
+
+function focusSelectedZip(zipCode) {
+  if (!map || !zipCode) {
     return;
   }
 
-  container.innerHTML = "";
-  yAxis.innerHTML = "";
+  const bounds = getZipBounds(zipCode);
+  const center = getZipCenter(zipCode) || (bounds?.isValid() ? bounds.getCenter() : null);
 
-  const maxCount = Math.max(...data.map((d) => d.propertyCount));
-  const tickCount = 5;
-
-  for (let i = tickCount; i >= 0; i -= 1) {
-    const tick = document.createElement("div");
-    tick.textContent = formatYAxisValue((maxCount / tickCount) * i);
-    yAxis.appendChild(tick);
+  if (center) {
+    map.flyTo(center, ZIP_FOCUS_ZOOM, {
+      animate: true,
+    });
+    return;
   }
 
-  const chart = document.createElement("div");
-  chart.className = "histogram-bars";
-
-  data.forEach((bin, index) => {
-    const group = document.createElement("div");
-    group.className = "histogram-group";
-
-    const bar = document.createElement("div");
-    bar.className = "histogram-bar";
-    bar.style.height = `${(bin.propertyCount / maxCount) * 100}%`;
-    bar.title = `${formatBinLabel(
-      bin.lowerBound,
-      bin.upperBound,
-    )}: ${bin.propertyCount.toLocaleString()} properties`;
-
-    const label = document.createElement("span");
-    label.className = "histogram-label";
-
-    const shouldShow =
-      index === 0 || index === data.length - 1 || index % 2 === 0;
-
-    label.textContent = shouldShow
-      ? formatBinLabel(bin.lowerBound, bin.upperBound)
-      : "";
-
-    group.appendChild(bar);
-    group.appendChild(label);
-    chart.appendChild(group);
-  });
-
-  container.appendChild(chart);
+  map.setZoom(ZIP_FOCUS_ZOOM);
 }
 
-renderDistributionHistogram(predictedValueBins);
+function renderLegend() {
+  const mode = modes[activeMode];
+
+  if (!legendControl) {
+    legendControl = L.control({ position: "bottomright" });
+    legendControl.onAdd = () => {
+      const div = L.DomUtil.create("div", "map-legend");
+      div.id = "mapLegend";
+      return div;
+    };
+    legendControl.addTo(map);
+  }
+
+  const legend = document.getElementById("mapLegend");
+  const labels =
+    activeMode === "gap"
+      ? GAP_BINS.map(
+          (bin) => `
+            <div class="legend-row">
+              <span style="background:${bin.color}"></span>
+              <em>${bin.label}</em>
+            </div>
+          `,
+        )
+      : mode.colors.map((color, index) => {
+          const lower = activeValueBreaks[index];
+          const upper = activeValueBreaks[index + 1];
+          const label =
+            index === mode.colors.length - 1
+              ? `${formatModeValue(lower)}+`
+              : `${formatModeValue(lower)} to ${formatModeValue(upper)}`;
+
+          return `
+            <div class="legend-row">
+              <span style="background:${color}"></span>
+              <em>${label}</em>
+            </div>
+          `;
+        });
+
+  legend.innerHTML = `
+    <strong>${mode.label}</strong>
+    ${labels.join("")}
+  `;
+}
+
+function renderTileLayer() {
+  const tileConfig = getTileConfig();
+
+  if (propertyTileLayer) {
+    map.removeLayer(propertyTileLayer);
+  }
+
+  propertyTileLayer = L.vectorGrid.protobuf(tileConfig.url, {
+    rendererFactory: L.canvas.tile,
+    interactive: true,
+    minZoom: tileConfig.minzoom,
+    maxZoom: tileConfig.maxzoom,
+    maxNativeZoom: tileConfig.maxzoom,
+    vectorTileLayerStyles: {
+      [tileConfig.sourceLayer]: styleFeature,
+    },
+  });
+
+  propertyTileLayer.on("mouseover", (event) => {
+    const properties = event.layer.properties;
+
+    if (selectedZip && getFeatureZip(properties) !== selectedZip) {
+      return;
+    }
+
+    const value = getTilePropertyValue(properties);
+    const featureZip = getFeatureZip(properties);
+    const gapLine =
+      activeMode === "gap"
+        ? `<br>Gap: ${Number.isFinite(Number(value)) ? formatGapPercent(value) : "unavailable"}`
+        : "";
+
+    hoverPopup = L.popup({
+      closeButton: false,
+      autoPan: false,
+      className: "hover-popup",
+    })
+      .setLatLng(event.latlng)
+      .setContent(`
+        <strong>${properties.address || "Address not available"}</strong><br>
+        ZIP: ${featureZip || "N/A"}<br>
+        Official: ${formatMoney(properties.tax_year_assessed_value)}<br>
+        Estimate: ${formatMoney(properties.current_assessed_value)}${gapLine}
+      `)
+      .openOn(map);
+  });
+
+  propertyTileLayer.on("mouseout", () => {
+    if (hoverPopup) {
+      map.closePopup(hoverPopup);
+      hoverPopup = null;
+    }
+  });
+
+  propertyTileLayer.on("click", (event) => {
+    const properties = event.layer.properties;
+
+    if (selectedZip && getFeatureZip(properties) !== selectedZip) {
+      setStatus(`That property is outside ZIP ${activeGeography}.`);
+      return;
+    }
+
+    renderSelectedProperty(properties);
+  });
+
+  propertyTileLayer.addTo(map);
+  renderLegend();
+}
+
+function normalizeBinRows(rows) {
+  return rows
+    .map((row) => ({
+      lowerBound: Number(row.lower_bound),
+      upperBound: row.upper_bound === null ? null : Number(row.upper_bound),
+      propertyCount: Number(row.property_count),
+    }))
+    .filter(
+      (row) =>
+        Number.isFinite(row.lowerBound) && Number.isFinite(row.propertyCount),
+    )
+    .sort((left, right) => left.lowerBound - right.lowerBound);
+}
+
+function buildDisplayBins(rows) {
+  const bins = [];
+
+  for (
+    let lowerBound = 0;
+    lowerBound < MAIN_DISPLAY_MAX;
+    lowerBound += MAIN_DISPLAY_BIN_SIZE
+  ) {
+    bins.push({
+      lowerBound,
+      upperBound: lowerBound + MAIN_DISPLAY_BIN_SIZE,
+      propertyCount: 0,
+      category: `${formatCompactMoney(lowerBound)} to ${formatCompactMoney(
+        lowerBound + MAIN_DISPLAY_BIN_SIZE,
+      )}`,
+      label:
+        lowerBound === 0 || lowerBound % 500000 === 0
+          ? formatCompactMoney(lowerBound)
+          : "",
+    });
+  }
+
+  bins.push({
+    lowerBound: MAIN_DISPLAY_MAX,
+    upperBound: null,
+    propertyCount: 0,
+    category: ">$2.5M",
+    label: ">$2.5M",
+  });
+
+  rows.forEach((row) => {
+    if (row.lowerBound >= MAIN_DISPLAY_MAX || row.upperBound > MAIN_DISPLAY_MAX) {
+      bins[bins.length - 1].propertyCount += row.propertyCount;
+      return;
+    }
+
+    const index = Math.floor(row.lowerBound / MAIN_DISPLAY_BIN_SIZE);
+    if (bins[index]) {
+      bins[index].propertyCount += row.propertyCount;
+    }
+  });
+
+  return bins;
+}
+
+function getMarkerCategory(rows, selectedValue) {
+  const value = Number(selectedValue);
+
+  if (!Number.isFinite(value)) {
+    return null;
+  }
+
+  const match = rows.find(
+    (row) =>
+      value >= row.lowerBound &&
+      (row.upperBound === null || value < row.upperBound),
+  );
+
+  return match?.category || null;
+}
+
+function computeMedianFromBins(rows) {
+  const total = rows.reduce((sum, row) => sum + row.propertyCount, 0);
+  let cumulative = 0;
+
+  if (total === 0) {
+    return null;
+  }
+
+  for (const row of rows) {
+    cumulative += row.propertyCount;
+    if (cumulative >= total / 2) {
+      return row.lowerBound + MAIN_DISPLAY_BIN_SIZE / 2;
+    }
+  }
+
+  return null;
+}
+
+function getAreaData() {
+  if (activeGeography !== "citywide") {
+    const area = zipContext?.areas?.[activeGeography];
+
+    return {
+      label: area?.label || `ZIP ${activeGeography}`,
+      recordCount: area?.record_count,
+      officialMedian: area?.official?.approx_median,
+      modelMedian: area?.model?.approx_median,
+      officialRows: normalizeBinRows(area?.official?.bins || []),
+      modelRows: normalizeBinRows(area?.model?.bins || []),
+    };
+  }
+
+  return {
+    label: "Citywide",
+    recordCount: metadata?.record_count,
+    officialMedian: computeMedianFromBins(citywideOfficialRows),
+    modelMedian: computeMedianFromBins(citywideModelRows),
+    officialRows: citywideOfficialRows,
+    modelRows: citywideModelRows,
+  };
+}
+
+function renderDistributionChart(chartElementId, rows, chartRef, selectedValue) {
+  const chartElement = document.getElementById(chartElementId);
+  const displayRows = buildDisplayBins(rows);
+  const markerCategory = getMarkerCategory(displayRows, selectedValue);
+  const labelByCategory = Object.fromEntries(
+    displayRows.map((row) => [row.category, row.label]),
+  );
+
+  if (chartRef) {
+    chartRef.destroy();
+  }
+
+  const chart = new window.ApexCharts(chartElement, {
+    chart: {
+      type: "bar",
+      height: 220,
+      toolbar: {
+        show: false,
+      },
+    },
+    annotations: {
+      xaxis: markerCategory
+        ? [
+            {
+              x: markerCategory,
+              borderColor: "#0f2438",
+              label: {
+                text: "Selected",
+                style: {
+                  background: "#0f2438",
+                  color: "#ffffff",
+                },
+              },
+            },
+          ]
+        : [],
+    },
+    series: [
+      {
+        name: "Properties",
+        data: displayRows.map((row) => row.propertyCount),
+      },
+    ],
+    colors: ["#1f5f99"],
+    dataLabels: {
+      enabled: false,
+    },
+    plotOptions: {
+      bar: {
+        columnWidth: "85%",
+      },
+    },
+    grid: {
+      borderColor: "#d9dde5",
+      strokeDashArray: 3,
+    },
+    xaxis: {
+      categories: displayRows.map((row) => row.category),
+      labels: {
+        rotate: 0,
+        hideOverlappingLabels: true,
+        formatter: (value) => labelByCategory[value] || "",
+      },
+    },
+    yaxis: {
+      labels: {
+        formatter: (value) => formatNumber(value),
+      },
+    },
+    tooltip: {
+      x: {
+        formatter: (value) => value,
+      },
+      y: {
+        formatter: (value) => `${formatNumber(value)} properties`,
+      },
+    },
+  });
+
+  chart.render();
+  return chart;
+}
+
+function updateSummary() {
+  const area = getAreaData();
+
+  document.getElementById("geographyText").textContent = area.label;
+  document.getElementById("recordCountText").textContent = formatNumber(
+    area.recordCount,
+  );
+  document.getElementById("medianOfficialText").textContent = formatMoney(
+    area.officialMedian,
+  );
+  document.getElementById("medianModelText").textContent = formatMoney(
+    area.modelMedian,
+  );
+  document.getElementById("mapModeText").textContent = modes[activeMode].label;
+  document.getElementById("modeLabel").textContent = modes[activeMode].description;
+}
+
+function updateCharts() {
+  if (!window.ApexCharts) {
+    document.getElementById("officialChartHelper").textContent =
+      "Chart library failed to load.";
+    document.getElementById("modelChartHelper").textContent =
+      "Chart library failed to load.";
+    return;
+  }
+
+  const area = getAreaData();
+  officialChart = renderDistributionChart(
+    "officialDistributionChart",
+    area.officialRows,
+    officialChart,
+    selectedProperties?.tax_year_assessed_value,
+  );
+  modelChart = renderDistributionChart(
+    "modelDistributionChart",
+    area.modelRows,
+    modelChart,
+    selectedProperties?.current_assessed_value,
+  );
+
+  document.getElementById("officialChartHelper").textContent =
+    `${area.label}; values above $2.5M are grouped.`;
+  document.getElementById("modelChartHelper").textContent =
+    `${area.label}; values above $2.5M are grouped.`;
+}
+
+function populateGeographySelect() {
+  const select = document.getElementById("geographySelect");
+  const zipCodes = Object.keys(zipContext?.areas || {}).sort();
+
+  zipCodes.forEach((zipCode) => {
+    const option = document.createElement("option");
+    option.value = zipCode;
+    option.textContent = `ZIP ${zipCode}`;
+    select.appendChild(option);
+  });
+}
+
+function renderModeControls() {
+  document.querySelectorAll(".mode-button").forEach((button) => {
+    button.classList.toggle("active", button.dataset.mode === activeMode);
+  });
+  updateActiveStyleState();
+  updateSummary();
+  renderLegend();
+
+  if (propertyTileLayer) {
+    renderTileLayer();
+  }
+}
+
+function getGapClass(value) {
+  const number = Number(value);
+
+  if (!Number.isFinite(number)) {
+    return "gap-neutral";
+  }
+
+  if (number > 0) {
+    return "gap-positive";
+  }
+
+  if (number < 0) {
+    return "gap-negative";
+  }
+
+  return "gap-neutral";
+}
+
+function calculateGapValue(properties) {
+  const official = Number(properties.tax_year_assessed_value);
+  const estimate = Number(properties.current_assessed_value);
+
+  if (
+    !Number.isFinite(official) ||
+    official < 10000 ||
+    !Number.isFinite(estimate)
+  ) {
+    return null;
+  }
+
+  return estimate - official;
+}
+
+function calculateGapPercent(properties) {
+  const official = Number(properties.tax_year_assessed_value);
+  const gap = calculateGapValue(properties);
+
+  if (!Number.isFinite(official) || official < 10000 || !Number.isFinite(gap)) {
+    return null;
+  }
+
+  return (gap / official) * 100;
+}
+
+function destroySelectedHistoryChart() {
+  if (selectedHistoryChart) {
+    selectedHistoryChart.destroy();
+    selectedHistoryChart = null;
+  }
+}
+
+function renderSelectedHistory(history) {
+  const helper = document.getElementById("selectedHistoryHelper");
+  const chartElement = document.getElementById("selectedHistoryChart");
+  destroySelectedHistoryChart();
+
+  if (!Array.isArray(history) || history.length === 0 || !window.ApexCharts) {
+    helper.textContent = "Assessment history unavailable.";
+    chartElement.innerHTML = "";
+    return;
+  }
+
+  helper.textContent = "Official assessed values by tax year.";
+  chartElement.innerHTML = "";
+
+  selectedHistoryChart = new window.ApexCharts(chartElement, {
+    chart: {
+      type: "line",
+      height: 180,
+      toolbar: {
+        show: false,
+      },
+    },
+    series: [
+      {
+        name: "Official assessed value",
+        data: history.map((item) => Number(item.assessed_value)),
+      },
+    ],
+    colors: ["#1f5f99"],
+    stroke: {
+      width: 3,
+    },
+    markers: {
+      size: 3,
+    },
+    xaxis: {
+      categories: history.map((item) => String(item.tax_year)),
+    },
+    yaxis: {
+      labels: {
+        formatter: (value) => formatCompactMoney(value),
+      },
+    },
+    tooltip: {
+      y: {
+        formatter: (value) => formatMoney(value),
+      },
+    },
+  });
+
+  selectedHistoryChart.render();
+}
+
+async function loadSelectedLookup(propertyId) {
+  try {
+    const url = new URL(PROPERTY_LOOKUP_API_URL, window.location.origin);
+    url.searchParams.set("property_id", propertyId);
+
+    const response = await fetch(url);
+    const payload = await response.json();
+
+    if (!response.ok || !payload.ok) {
+      throw new Error(payload.error || "Assessment history unavailable.");
+    }
+
+    selectedLookupPayload = payload;
+    renderSelectedPercentiles();
+    renderSelectedHistory(payload.history || []);
+  } catch (error) {
+    selectedLookupPayload = null;
+    renderSelectedPercentiles();
+    renderSelectedHistory([]);
+  }
+}
+
+function renderSelectedPercentiles() {
+  const citywide = selectedLookupPayload?.context?.citywide || {};
+  const zip = selectedLookupPayload?.context?.zip || {};
+
+  document.getElementById("selectedOfficialCitywidePercentile").textContent =
+    formatPercentile(citywide.official_percentile);
+  document.getElementById("selectedOfficialZipPercentile").textContent =
+    formatPercentile(zip.official_percentile);
+  document.getElementById("selectedModelCitywidePercentile").textContent =
+    formatPercentile(citywide.model_percentile);
+  document.getElementById("selectedModelZipPercentile").textContent =
+    formatPercentile(zip.model_percentile);
+}
+
+function renderSelectedProperty(properties) {
+  selectedProperties = properties;
+  selectedLookupPayload = null;
+  document.getElementById("citywidePanel").hidden = true;
+  document.getElementById("selectedPanel").hidden = false;
+  document.getElementById("selectedAddress").textContent =
+    properties.address || "Address not available";
+  document.getElementById("selectedPropertyId").textContent =
+    properties.property_id || "N/A";
+  document.getElementById("selectedOfficialValue").textContent = formatMoney(
+    properties.tax_year_assessed_value,
+  );
+  document.getElementById("selectedEstimateValue").textContent = formatMoney(
+    properties.current_assessed_value,
+  );
+  const gapPercent = calculateGapPercent(properties);
+  const selectedGapElement = document.getElementById("selectedGapValue");
+  selectedGapElement.className = getGapClass(gapPercent);
+  selectedGapElement.textContent =
+    `${formatMoney(calculateGapValue(properties))} (${formatGapPercent(gapPercent)})`;
+  document.getElementById("selectedHistoryHelper").textContent =
+    "Loading assessment history...";
+  document.getElementById("selectedHistoryChart").innerHTML = "";
+  renderSelectedPercentiles();
+  updateCharts();
+  loadSelectedLookup(properties.property_id);
+}
+
+function clearSelection() {
+  selectedProperties = null;
+  selectedLookupPayload = null;
+  destroySelectedHistoryChart();
+  document.getElementById("citywidePanel").hidden = false;
+  document.getElementById("selectedPanel").hidden = true;
+  updateCharts();
+}
+
+async function loadDistributionInputs() {
+  const [officialResponse, modelResponse] = await Promise.all([
+    fetch(TAX_YEAR_ASSESSMENT_BINS_URL),
+    fetch(CURRENT_ASSESSMENT_BINS_URL),
+  ]);
+
+  if (!officialResponse.ok || !modelResponse.ok) {
+    throw new Error("Unable to load one or more public distribution configs.");
+  }
+
+  const [officialPayload, modelPayload] = await Promise.all([
+    officialResponse.json(),
+    modelResponse.json(),
+  ]);
+
+  const taxYears = officialPayload
+    .map((row) => Number(row.tax_year))
+    .filter((taxYear) => Number.isFinite(taxYear));
+  const latestTaxYear = Math.max(...taxYears);
+  citywideOfficialRows = normalizeBinRows(
+    officialPayload.filter((row) => Number(row.tax_year) === latestTaxYear),
+  );
+  citywideModelRows = normalizeBinRows(modelPayload);
+  resetBreakCache();
+}
+
+async function initializeDashboard() {
+  try {
+    const [metadataResponse, zipResponse] = await Promise.all([
+      fetch(MAP_STYLE_METADATA_URL),
+      fetch(ZIP_ASSESSMENT_CONTEXT_URL),
+    ]);
+
+    if (!metadataResponse.ok || !zipResponse.ok) {
+      throw new Error("Unable to load public dashboard assets.");
+    }
+
+    metadata = await metadataResponse.json();
+    zipContext = await zipResponse.json();
+    await loadDistributionInputs();
+    populateGeographySelect();
+    updateActiveStyleState();
+    updateSummary();
+    updateCharts();
+    renderTileLayer();
+    setStatus("");
+  } catch (error) {
+    setStatus(
+      error instanceof Error
+        ? error.message
+        : "Unable to load public dashboard assets.",
+    );
+    metadata = metadata || {};
+    zipContext = zipContext || { areas: {} };
+    updateActiveStyleState();
+    updateSummary();
+    renderTileLayer();
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".mode-button").forEach((button) => {
+    button.addEventListener("click", () => {
+      activeMode = button.dataset.mode;
+      renderModeControls();
+    });
+  });
+
+  document.getElementById("geographySelect").addEventListener("change", (event) => {
+    const previousGeography = activeGeography;
+    activeGeography = event.target.value;
+    updateActiveStyleState();
+    if (
+      selectedProperties &&
+      selectedZip &&
+      getFeatureZip(selectedProperties) !== selectedZip
+    ) {
+      clearSelection();
+    }
+    if (selectedZip && previousGeography !== activeGeography) {
+      focusSelectedZip(selectedZip);
+    }
+    updateSummary();
+    updateCharts();
+    renderTileLayer();
+  });
+
+  document.getElementById("clearSelectionBtn").addEventListener("click", clearSelection);
+  initializeDashboard();
+});

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -9,121 +9,146 @@
   <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
-  <header class="topbar">
-    <div>
-      <h1>CAMA Reviewer Dashboard</h1>
-      <p>Philadelphia property assessment review interface</p>
-    </div>
-  </header>
-
-  <main class="page">
-    <section class="filters">
-      <select>
-        <option>All Neighborhoods</option>
-        <option>Center City</option>
-        <option>University City</option>
-        <option>West Philadelphia</option>
-      </select>
-
-      <select>
-        <option>Predicted Value</option>
-        <option>Percent Change</option>
-        <option>Current Value</option>
-        <option>Previous Value</option>
-      </select>
-
-      <select>
-        <option>2025</option>
-        <option>2024</option>
-        <option>2023</option>
-      </select>
-    </section>
-
-    <section class="dashboard-top">
-      <div class="card map-card">
-        <div class="card-header">
-          <h2>Map View</h2>
-          <p>Citywide spatial context for property assessment review</p>
+  <main class="reviewer-page">
+    <section class="map-panel" aria-label="Property review map">
+      <div class="map-toolbar">
+        <div>
+          <p class="eyebrow">Philadelphia CAMA</p>
+          <h1>Reviewer Dashboard</h1>
         </div>
-        <div id="map"></div>
+        <div class="toolbar-controls">
+          <label class="geography-control" for="geographySelect">
+            Geography
+            <select id="geographySelect">
+              <option value="citywide">Citywide</option>
+            </select>
+          </label>
+          <div class="mode-toggle" aria-label="Map value mode">
+            <button type="button" class="mode-button active" data-mode="official">Official Value</button>
+            <button type="button" class="mode-button" data-mode="estimate">Model Estimate</button>
+            <button type="button" class="mode-button" data-mode="gap">Gap (%)</button>
+          </div>
+        </div>
       </div>
-
-      <div class="side-panel">
-  <div class="card summary-card">
-    <h2>Summary</h2>
-    <div class="summary-list">
-      <p><span>Total Properties</span><strong>582,314</strong></p>
-      <p><span>Median Predicted Value</span><strong>$87,500</strong></p>
-      <p><span>Most Common Range</span><strong>$20k–$30k</strong></p>
-      <p><span>Peak Bin Count</span><strong>38,318</strong></p>
-    </div>
-  </div>
-
-  <div class="card legend-card">
-    <h2>Assessed Value Legend</h2>
-
-    <div class="legend-row">
-      <span class="legend-color legend-1"></span>
-      <span>$0–$100,000</span>
-    </div>
-
-    <div class="legend-row">
-      <span class="legend-color legend-2"></span>
-      <span>$100,000–$250,000</span>
-    </div>
-
-    <div class="legend-row">
-      <span class="legend-color legend-3"></span>
-      <span>$250,000–$500,000</span>
-    </div>
-
-    <div class="legend-row">
-      <span class="legend-color legend-4"></span>
-      <span>$500,000–$750,000</span>
-    </div>
-
-    <div class="legend-row">
-      <span class="legend-color legend-5"></span>
-      <span>$750,000–$1,000,000</span>
-    </div>
-
-    <div class="legend-row">
-      <span class="legend-color legend-6"></span>
-      <span>$1,000,000+</span>
-    </div>
-  </div>
-</div>
+      <div id="map"></div>
+      <p id="mapStatus" class="status-text" role="status" aria-live="polite">
+        Loading public map assets...
+      </p>
     </section>
 
-    <section class="dashboard-bottom">
-      <div class="card distribution-card">
-        <h2>Distribution of Predicted Property Values</h2>
-        <p class="card-subtitle">Count of properties by predicted value range</p>
-
-        <div class="chart-shell">
-          <div class="chart-yaxis" id="distributionYAxis"></div>
-         <div id="distributionChart" class="chart-area"></div>
-        </div>
-
-        <p class="chart-note">
-          All value bins are included; x-axis labels are sampled for readability.
+    <aside class="sidebar" aria-label="Review details">
+      <section id="citywidePanel" class="sidebar-section">
+        <p class="eyebrow">Citywide context</p>
+        <h2>Assessment review</h2>
+        <p id="modeLabel" class="sidebar-copy">
+          Showing official assessed value across residential parcels.
         </p>
-      </div>
 
-      <div class="card trend-card">
-        <div class="card-header">
-          <h2>Trend / Notes</h2>
-          <p>Reserved for additional comparisons, notes, or future metrics</p>
+        <dl id="citywideSummary" class="summary-grid">
+          <div>
+            <dt>Geography</dt>
+            <dd id="geographyText">Citywide</dd>
+          </div>
+          <div>
+            <dt>Records</dt>
+            <dd id="recordCountText">-</dd>
+          </div>
+          <div>
+            <dt>Median official</dt>
+            <dd id="medianOfficialText">-</dd>
+          </div>
+          <div>
+            <dt>Median model</dt>
+            <dd id="medianModelText">-</dd>
+          </div>
+          <div>
+            <dt>Map mode</dt>
+            <dd id="mapModeText">Official Value</dd>
+          </div>
+        </dl>
+
+        <div class="chart-card chart-card-primary">
+          <h3>Official assessment distribution</h3>
+          <p id="officialChartHelper" class="helper-text">Loading public config...</p>
+          <div id="officialDistributionChart" class="mini-chart"></div>
         </div>
-        <div class="empty-chart">
-          <p>No additional trend data available yet</p>
+
+        <div class="chart-card chart-card-secondary">
+          <h3>Model estimate distribution</h3>
+          <p id="modelChartHelper" class="helper-text">Loading public config...</p>
+          <div id="modelDistributionChart" class="mini-chart"></div>
         </div>
-      </div>
-    </section>
+
+        <p class="instruction-text">Click a parcel on the map to inspect property-level values.</p>
+      </section>
+
+      <section id="selectedPanel" class="sidebar-section" hidden>
+        <button id="clearSelectionBtn" type="button" class="text-button">Clear selection</button>
+        <div class="selected-group property-identity">
+          <p class="eyebrow">Selected property</p>
+          <h2 id="selectedAddress">Address not available</h2>
+          <dl class="detail-list">
+            <div>
+              <dt>OPA ID</dt>
+              <dd id="selectedPropertyId">-</dd>
+            </div>
+          </dl>
+        </div>
+
+        <div class="selected-group comparison-block">
+          <h3>Comparison</h3>
+          <dl class="detail-list">
+            <div>
+              <dt>Official Assessed Value</dt>
+              <dd id="selectedOfficialValue">-</dd>
+            </div>
+            <div>
+              <dt>Model Estimate</dt>
+              <dd id="selectedEstimateValue">-</dd>
+            </div>
+            <div>
+              <dt>Gap</dt>
+              <dd id="selectedGapValue">-</dd>
+            </div>
+          </dl>
+        </div>
+
+        <div class="selected-group context-block">
+          <h3>Context</h3>
+          <dl class="detail-list">
+            <div>
+              <dt>Official percentile citywide</dt>
+              <dd id="selectedOfficialCitywidePercentile">-</dd>
+            </div>
+            <div>
+              <dt>Official percentile in ZIP</dt>
+              <dd id="selectedOfficialZipPercentile">-</dd>
+            </div>
+            <div>
+              <dt>Model percentile citywide</dt>
+              <dd id="selectedModelCitywidePercentile">-</dd>
+            </div>
+            <div>
+              <dt>Model percentile in ZIP</dt>
+              <dd id="selectedModelZipPercentile">-</dd>
+            </div>
+          </dl>
+        </div>
+        <p class="sidebar-copy">
+          The map shows one value dimension at a time. Official values and model estimates are separated so reviewers can compare them deliberately.
+        </p>
+        <div class="chart-card">
+          <h3>Assessment history</h3>
+          <p id="selectedHistoryHelper" class="helper-text">Loading assessment history...</p>
+          <div id="selectedHistoryChart" class="mini-chart"></div>
+        </div>
+      </section>
+    </aside>
   </main>
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet.vectorgrid@1.3.0/dist/Leaflet.VectorGrid.bundled.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
   <script src="./main.js"></script>
 </body>
 </html>
