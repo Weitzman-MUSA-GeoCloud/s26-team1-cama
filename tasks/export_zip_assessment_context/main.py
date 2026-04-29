@@ -12,6 +12,8 @@ load_dotenv()
 
 
 OUTPUT_OBJECT_NAME = "configs/zip_assessment_context.json"
+MAIN_DISPLAY_MAX = 2500000
+MAIN_DISPLAY_BIN_SIZE = 100000
 
 
 @functions_framework.http
@@ -30,29 +32,24 @@ def export_zip_assessment_context(request):
             {"Content-Type": "application/json"},
         )
 
-    sql = f"""
-    WITH latest_tax_year AS (
+    base_sql = f"""
+    WITH latest_official AS (
         SELECT
-            MAX(SAFE_CAST(year AS INT64)) AS tax_year
+            property_id,
+            SAFE_CAST(year AS INT64) AS tax_year,
+            SAFE_CAST(market_value AS FLOAT64) AS official_value
         FROM `{project_id}.{core_dataset}.opa_assessments`
         WHERE SAFE_CAST(year AS INT64) IS NOT NULL
-    ),
-
-    latest_assessments AS (
-        SELECT
-            assessments.property_id,
-            MAX(SAFE_CAST(assessments.market_value AS FLOAT64))
-                AS tax_year_assessed_value
-        FROM `{project_id}.{core_dataset}.opa_assessments` AS assessments
-        CROSS JOIN latest_tax_year
-        WHERE SAFE_CAST(assessments.year AS INT64) = latest_tax_year.tax_year
-        GROUP BY assessments.property_id
+        QUALIFY ROW_NUMBER() OVER (
+            PARTITION BY property_id
+            ORDER BY SAFE_CAST(year AS INT64) DESC
+        ) = 1
     ),
 
     current_predictions AS (
         SELECT
             property_id,
-            SAFE_CAST(predicted_value AS FLOAT64) AS current_assessed_value
+            SAFE_CAST(predicted_value AS FLOAT64) AS model_value
         FROM `{project_id}.{derived_dataset}.current_assessments`
         QUALIFY ROW_NUMBER() OVER (
             PARTITION BY property_id
@@ -60,25 +57,25 @@ def export_zip_assessment_context(request):
         ) = 1
     ),
 
-    property_values AS (
+    base AS (
         SELECT
             properties.zip_code,
-            latest_assessments.tax_year_assessed_value,
-            current_predictions.current_assessed_value,
+            properties.property_id,
+            latest_official.official_value,
+            current_predictions.model_value,
             CASE
-                WHEN latest_assessments.tax_year_assessed_value IS NULL
-                    OR latest_assessments.tax_year_assessed_value < 10000
+                WHEN latest_official.official_value IS NULL
+                    OR latest_official.official_value < 10000
                     THEN NULL
                 ELSE
                     SAFE_DIVIDE(
-                        current_predictions.current_assessed_value
-                        - latest_assessments.tax_year_assessed_value,
-                        latest_assessments.tax_year_assessed_value
+                        current_predictions.model_value - latest_official.official_value,
+                        latest_official.official_value
                     ) * 100
             END AS gap_pct
         FROM `{project_id}.{core_dataset}.opa_properties` AS properties
-        LEFT JOIN latest_assessments
-            ON properties.property_id = latest_assessments.property_id
+        LEFT JOIN latest_official
+            ON properties.property_id = latest_official.property_id
         LEFT JOIN current_predictions
             ON properties.property_id = current_predictions.property_id
         WHERE
@@ -90,118 +87,125 @@ def export_zip_assessment_context(request):
                 'VACANT LAND - RESIDENTIAL',
                 'GARAGE - RESIDENTIAL'
             )
-    ),
-
-    stats AS (
-        SELECT
-            zip_code,
-            COUNT(*) AS record_count,
-            APPROX_QUANTILES(tax_year_assessed_value, 2)[OFFSET(1)]
-                AS official_median,
-            APPROX_QUANTILES(current_assessed_value, 2)[OFFSET(1)]
-                AS model_median,
-            APPROX_QUANTILES(gap_pct, 2)[OFFSET(1)] AS gap_median_pct
-        FROM property_values
-        GROUP BY zip_code
-    ),
-
-    official_bins AS (
-        SELECT
-            zip_code,
-            LEAST(
-                DIV(CAST(FLOOR(tax_year_assessed_value) AS INT64), 100000)
-                    * 100000,
-                2500000
-            ) AS lower_bound,
-            COUNT(*) AS property_count
-        FROM property_values
-        WHERE tax_year_assessed_value IS NOT NULL
-        GROUP BY zip_code, lower_bound
-    ),
-
-    model_bins AS (
-        SELECT
-            zip_code,
-            LEAST(
-                DIV(CAST(FLOOR(current_assessed_value) AS INT64), 100000)
-                    * 100000,
-                2500000
-            ) AS lower_bound,
-            COUNT(*) AS property_count
-        FROM property_values
-        WHERE current_assessed_value IS NOT NULL
-        GROUP BY zip_code, lower_bound
     )
+    """
+
+    summary_sql = f"""
+    {base_sql}
 
     SELECT
-        stats.zip_code,
-        stats.record_count,
-        stats.official_median,
-        stats.model_median,
-        stats.gap_median_pct,
-        ARRAY(
-            SELECT AS STRUCT
-                official_bins.lower_bound,
-                CASE
-                    WHEN official_bins.lower_bound = 2500000 THEN NULL
-                    ELSE official_bins.lower_bound + 100000
-                END AS upper_bound,
-                official_bins.property_count
-            FROM official_bins
-            WHERE official_bins.zip_code = stats.zip_code
-            ORDER BY official_bins.lower_bound
-        ) AS official_bins,
-        ARRAY(
-            SELECT AS STRUCT
-                model_bins.lower_bound,
-                CASE
-                    WHEN model_bins.lower_bound = 2500000 THEN NULL
-                    ELSE model_bins.lower_bound + 100000
-                END AS upper_bound,
-                model_bins.property_count
-            FROM model_bins
-            WHERE model_bins.zip_code = stats.zip_code
-            ORDER BY model_bins.lower_bound
-        ) AS model_bins
-    FROM stats
-    ORDER BY stats.zip_code
+        zip_code,
+        COUNT(*) AS record_count,
+        APPROX_QUANTILES(official_value, 100)[OFFSET(50)]
+            AS official_approx_median,
+        APPROX_QUANTILES(model_value, 100)[OFFSET(50)]
+            AS model_approx_median,
+        APPROX_QUANTILES(gap_pct, 100)[OFFSET(50)]
+            AS gap_approx_median_pct
+    FROM base
+    GROUP BY zip_code
+    ORDER BY zip_code
+    """
+
+    official_bins_sql = f"""
+    {base_sql}
+
+    SELECT
+        zip_code,
+        lower_bound,
+        CASE
+            WHEN lower_bound = {MAIN_DISPLAY_MAX} THEN NULL
+            ELSE lower_bound + {MAIN_DISPLAY_BIN_SIZE}
+        END AS upper_bound,
+        COUNT(*) AS property_count
+    FROM (
+        SELECT
+            zip_code,
+            CAST(
+                FLOOR(
+                    LEAST(official_value, {MAIN_DISPLAY_MAX})
+                    / {MAIN_DISPLAY_BIN_SIZE}
+                ) * {MAIN_DISPLAY_BIN_SIZE}
+                AS INT64
+            ) AS lower_bound
+        FROM base
+        WHERE official_value IS NOT NULL
+    )
+    GROUP BY zip_code, lower_bound, upper_bound
+    ORDER BY zip_code, lower_bound
+    """
+
+    model_bins_sql = f"""
+    {base_sql}
+
+    SELECT
+        zip_code,
+        lower_bound,
+        CASE
+            WHEN lower_bound = {MAIN_DISPLAY_MAX} THEN NULL
+            ELSE lower_bound + {MAIN_DISPLAY_BIN_SIZE}
+        END AS upper_bound,
+        COUNT(*) AS property_count
+    FROM (
+        SELECT
+            zip_code,
+            CAST(
+                FLOOR(
+                    LEAST(model_value, {MAIN_DISPLAY_MAX})
+                    / {MAIN_DISPLAY_BIN_SIZE}
+                ) * {MAIN_DISPLAY_BIN_SIZE}
+                AS INT64
+            ) AS lower_bound,
+        FROM base
+        WHERE model_value IS NOT NULL
+    )
+    GROUP BY zip_code, lower_bound, upper_bound
+    ORDER BY zip_code, lower_bound
     """
 
     try:
         bigquery_client = bigquery.Client()
-        rows = bigquery_client.query(sql).result()
+        summary_rows = bigquery_client.query(summary_sql).result()
 
         areas = {}
-        for row in rows:
+        for row in summary_rows:
             areas[row.zip_code] = {
                 "label": f"ZIP {row.zip_code}",
                 "record_count": row.record_count,
                 "official": {
-                    "approx_median": row.official_median,
-                    "bins": [
-                        {
-                            "lower_bound": item["lower_bound"],
-                            "upper_bound": item["upper_bound"],
-                            "property_count": item["property_count"],
-                        }
-                        for item in row.official_bins
-                    ],
+                    "approx_median": row.official_approx_median,
+                    "bins": [],
                 },
                 "model": {
-                    "approx_median": row.model_median,
-                    "bins": [
-                        {
-                            "lower_bound": item["lower_bound"],
-                            "upper_bound": item["upper_bound"],
-                            "property_count": item["property_count"],
-                        }
-                        for item in row.model_bins
-                    ],
+                    "approx_median": row.model_approx_median,
+                    "bins": [],
                 },
                 "gap": {
-                    "approx_median_pct": row.gap_median_pct,
+                    "approx_median_pct": row.gap_approx_median_pct,
                 },
             }
+
+        official_bin_rows = bigquery_client.query(official_bins_sql).result()
+        for row in official_bin_rows:
+            if row.zip_code in areas:
+                areas[row.zip_code]["official"]["bins"].append(
+                    {
+                        "lower_bound": row.lower_bound,
+                        "upper_bound": row.upper_bound,
+                        "property_count": row.property_count,
+                    }
+                )
+
+        model_bin_rows = bigquery_client.query(model_bins_sql).result()
+        for row in model_bin_rows:
+            if row.zip_code in areas:
+                areas[row.zip_code]["model"]["bins"].append(
+                    {
+                        "lower_bound": row.lower_bound,
+                        "upper_bound": row.upper_bound,
+                        "property_count": row.property_count,
+                    }
+                )
 
         payload = {
             "geography": "zip_code",
