@@ -1,121 +1,120 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Historical Assessment Value Widget</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <link rel="stylesheet" href="./style.css" />
-  </head>
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <script src="./main.js"></script>
-  <body>
-    <main class="widget-page">
-      <header class="widget-header">
-        <p class="eyebrow">Property assessments</p>
-        <h1>Historical Assessment Value</h1>
-        <p class="intro">
-          View historical assessment values for a selected property using its
-          OPA ID.
-        </p>
-      </header>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Property Assessment Viewer</title>
 
-      <section class="lookup-panel" aria-label="Property lookup">
-        <label for="opaIdInput" class="input-label">OPA ID</label>
-        <div class="lookup-row">
-          <input
-            id="opaIdInput"
-            type="text"
-            inputmode="numeric"
-            placeholder="Enter OPA ID (e.g., 123456700)"
-            aria-describedby="opaIdHelp"
-          />
-          <button id="searchBtn" type="button">Look up property</button>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <main class="widget-page">
+    <header class="widget-header">
+      <p class="eyebrow">Philadelphia CAMA</p>
+      <h1>Property Assessment Viewer</h1>
+      <p class="intro">
+        Look up a sample property assessment history and compare it with
+        citywide assessment distributions.
+      </p>
+    </header>
+
+    <section class="lookup-panel" aria-label="Property lookup">
+      <label for="opaIdInput" class="input-label">OPA ID</label>
+      <div class="lookup-row">
+        <input
+          id="opaIdInput"
+          type="text"
+          inputmode="numeric"
+          placeholder="Enter sample OPA ID (e.g., 502244720)"
+          aria-describedby="opaIdHelp lookupMessage"
+        />
+        <button id="searchBtn" type="button">Look up property</button>
+      </div>
+      <p id="opaIdHelp" class="helper-text">
+        This static demo uses sample property data. Try OPA ID 502244720.
+      </p>
+      <p id="lookupMessage" class="lookup-message" role="status" aria-live="polite"></p>
+    </section>
+
+    <section class="main-grid">
+      <article class="card summary-card" aria-labelledby="summary-heading">
+        <h2 id="summary-heading">Property summary</h2>
+        <dl class="summary-list">
+          <div class="summary-row">
+            <dt>OPA ID</dt>
+            <dd id="opaIdText">-</dd>
+          </div>
+          <div class="summary-row">
+            <dt>Address</dt>
+            <dd id="addressText">-</dd>
+          </div>
+          <div class="summary-row">
+            <dt>Current assessment</dt>
+            <dd id="currentValueText">-</dd>
+          </div>
+          <div class="summary-row">
+            <dt>Tax year</dt>
+            <dd id="taxYearText">-</dd>
+          </div>
+          <div class="summary-row">
+            <dt>Neighborhood</dt>
+            <dd id="neighborhoodText">-</dd>
+          </div>
+        </dl>
+      </article>
+
+      <article class="card map-card" aria-labelledby="map-heading">
+        <div class="card-header">
+          <h2 id="map-heading">Map</h2>
+          <p>Property location and surrounding context</p>
         </div>
-        <p id="opaIdHelp" class="helper-text">
-          Enter a 9–10 digit OPA identifier to load property assessment history.
-        </p>
-      </section>
+        <div id="map"></div>
+      </article>
+    </section>
 
-      <section class="content-grid">
-        <article class="card summary-card" aria-labelledby="summary-heading">
-          <h2 id="summary-heading">Property summary</h2>
-          <dl class="summary-list">
-            <div class="summary-row">
-              <dt>OPA ID</dt>
-              <dd id="opaIdText">123456700</dd>
-            </div>
-            <div class="summary-row">
-              <dt>Address</dt>
-              <dd id="addressText">123 Market St</dd>
-            </div>
-            <div class="summary-row">
-              <dt>Current assessment</dt>
-              <dd id="currentValueText">$320,000</dd>
-            </div>
-            <div class="summary-row">
-              <dt>Tax year</dt>
-              <dd id="taxYearText">2025</dd>
-            </div>
-            <div class="summary-row">
-              <dt>Neighborhood</dt>
-              <dd id="neighborhoodText">Center City</dd>
-            </div>
-          </dl>
-        </article>
+    <section class="bottom-grid">
+      <article class="card history-card" aria-labelledby="history-heading">
+        <div class="card-header">
+          <h2 id="history-heading">Assessment history</h2>
+          <p>Historical assessed values by tax year for the selected sample property</p>
+        </div>
+        <div id="assessmentHistoryChart" class="history-chart" aria-live="polite"></div>
+      </article>
 
-        <article class="card map-card" aria-labelledby="map-heading">
-          <div class="card-header">
-            <h2 id="map-heading">Map</h2>
-            <p>Property location and surrounding context</p>
-          </div>
-          <div id="map"></div>
-        </article>
-      </section>
-
-      <section class="bottom-grid">
-        <article class="card trend-card" aria-labelledby="trend-heading">
-          <div class="card-header">
-            <h2 id="trend-heading">Assessment history</h2>
-            <p>Historical assessed values by tax year</p>
-          </div>
-          <div class="trend-placeholder" aria-hidden="true">
-            <div class="bar-group">
-              <div class="bar" style="height: 38%"></div>
-              <span>2021</span>
-            </div>
-            <div class="bar-group">
-              <div class="bar" style="height: 48%"></div>
-              <span>2022</span>
-            </div>
-            <div class="bar-group">
-              <div class="bar" style="height: 58%"></div>
-              <span>2023</span>
-            </div>
-            <div class="bar-group">
-              <div class="bar" style="height: 70%"></div>
-              <span>2024</span>
-            </div>
-            <div class="bar-group">
-              <div class="bar" style="height: 82%"></div>
-              <span>2025</span>
-            </div>
-          </div>
-        </article>
-
-        <article class="card notes-card" aria-labelledby="notes-heading">
-          <div class="card-header">
-            <h2 id="notes-heading">Notes</h2>
-            <p>Placeholder space for assessment context or methodology</p>
-          </div>
-          <p class="notes-text">
-            This area can be used later for explanatory text, metadata, or
-            links to assessment records.
+      <article class="card distribution-card" aria-labelledby="distribution-heading">
+        <div class="card-header">
+          <h2 id="distribution-heading">Citywide assessment distribution</h2>
+          <p id="latest-assessment-chart-helper">
+            Loading citywide assessment distribution from the public data asset.
           </p>
-        </article>
-      </section>
-    </main>
+        </div>
+        <div
+          id="latest-assessment-chart-error"
+          class="chart-error"
+          role="status"
+          aria-live="polite"
+        ></div>
+        <div id="latest-assessment-chart"></div>
+      </article>
+    </section>
 
-    <script src="./main.js"></script>
-  </body>
+    <section class="card notes-card" aria-labelledby="notes-heading">
+      <div class="card-header">
+        <h2 id="notes-heading">Notes</h2>
+        <p>How this demo connects to the cloud data pipeline</p>
+      </div>
+      <p class="notes-text">
+        The property lookup, map, and assessment history use static sample data
+        for this browser-only demo. The citywide distribution chart loads from
+        the public Cloud Storage JSON file generated by the data pipeline:
+        <code>configs/tax_year_assessment_bins.json</code>.
+      </p>
+    </section>
+  </main>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+  <script src="./main.js"></script>
+</body>
 </html>
