@@ -15,7 +15,6 @@ FROM ML.predict (
             interior_condition_rev,
             exterior_condition_rev,
             garage_spaces,
-            assessment_year,
             year_built_int
         FROM `musa5090s26-team1.derived.current_assessments_prediction_input`
     )
